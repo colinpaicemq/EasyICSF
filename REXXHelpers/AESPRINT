@@ -1,0 +1,134 @@
+/* routine to format a AES   */
+/* input the hex data        */
+/* table 573 page 1347 - header   */
+parse source . . me .
+parse arg data
+data = x2c(data)
+
+p = 1 /* pointer to the base data */
+if substr(data,p+0,1) = '01'x then say "internal token "
+else ,
+if substr(data,p+0,1) = '02'x then say "external token "
+else ,
+do
+  say "unexpected AES header " c2x(substr(data,1,1))
+  return 8
+end
+lTotal = c2d(substr(data,p+2,2))
+say "total length " lTotal
+     if substr(data,p+8,1) = '00'x then say "no key present"
+else if substr(data,p+8,1) = '01'x then say "key is clear"
+else if substr(data,p+8,1) = '02'x then say "key is under KEK"
+else if substr(data,p+8,1) = '03'x then say "key is under Master key"
+
+     if substr(data,p+ 9,1) = '00'x then say "No KVP"
+else if substr(data,p+ 9,1) = '01'x then say "AES master key ver"
+else if substr(data,p+ 9,1) = '02'x then say "KEK key ver"
+else if substr(data,p+ 9,1) = '03'x then say "Trunc AES master"
+
+     if substr(data,p+26,1) = '00'x then say "Wrapping:none"
+else if substr(data,p+26,1) = '01'x then say "Wrapping SHA-1    "
+else if substr(data,p+26,1) = '02'x then say "Wrapping SHA-256  "
+else if substr(data,p+26,1) = '04'x then say "Wrapping SHA-384  "
+else if substr(data,p+26,1) = '08'x then say "Wrapping SHA-512  "
+
+     if substr(data,p+41,1) = '01'x then say "Valid alg:DES"
+else if substr(data,p+41,1) = '02'x then say "Valid alg:AES"
+else if substr(data,p+41,1) = '03'x then say "Valid alg:HMAC"
+
+     if substr(data,p+42,2) = '0001'x then say "Key type:Cipher"
+else if substr(data,p+42,2) = '0002'x then say "Key type:Mac"
+else if substr(data,p+42,2) = '0003'x then say "Key type:Exporter"
+else if substr(data,p+42,2) = '0004'x then say "Key type:Importer"
+else if substr(data,p+42,2) = '0005'x then say "Key type:PinProt"
+else if substr(data,p+42,2) = '0006'x then say "Key type:PinCalc"
+else if substr(data,p+42,2) = '0007'x then say "Key type:PinPRW"
+else if substr(data,p+42,2) = '0008'x then say "Key type:DESUSECV"
+else if substr(data,p+42,2) = '0009'x then say "Key type:DKYGENKY"
+else if substr(data,p+42,2) = '000A'x then say "Key type:SECMSG"
+
+ if substr(data,p+42,2) = '0001'x then rc= cipher()
+
+kuf = c2d(substr(data,p+44,1))
+kmf = c2d(substr(data,p+49,1))
+say "kuf ="kuf
+say "kmf ="kmf
+
+x=dobit(substr(data,p+50,1),'80'x,"Allow export with symmetric key")
+x=dobit(substr(data,p+50,1),'40'x,"Allow export unauth asym key")
+x=dobit(substr(data,p+50,1),'20'x,"Allow export auth asym key")
+x=dobit(substr(data,p+50,1),'10'x,"Allow export RAW format")
+x=dobit(substr(data,p+50,1),'08'x,"Allow export CPACF protected")
+x=dobit(substr(data,p+50,1),'01'x,"Compliant tagged")
+
+x=dobit(substr(data,p+51,1),'80'x,"Prohibit export using DES")
+x=dobit(substr(data,p+51,1),'40'x,"Prohibit export using AES")
+x=dobit(substr(data,p+51,1),'08'x,"Prohibit export using RSA")
+
+q = 48 + 2 * kuf
+x=dobit(substr(data,q ,1),'80'x,"Key incomplete"           )
+x=dobit(substr(data,q ,1),'40'x,"Key incomplete"           )
+
+x=dobit(substr(data,q+1 ,1),'10'x,"Encrypted untrusted KEK" )
+x=dobit(substr(data,q+1 ,1),'08'x,"No type/usage attributes" )
+x=dobit(substr(data,q+1 ,1),'04'x,"NEncrypted with weaker key")
+x=dobit(substr(data,q+1 ,1),'02'x,"Non CCA format        " )
+x=dobit(substr(data,q+1 ,1),'01'x,"Encryped in ECB mode " )
+
+q = 50 + 2 * kuf
+     if substr(data,q   ,1) = '00'x then say "Pedigree Orig Unknown key"
+else if substr(data,q   ,1) = '01'x then say "Pedigree Orig other"
+else if substr(data,q   ,1) = '02'x then say "Pedigree Orig Random"
+else if substr(data,q   ,1) = '03'x then say "Pedigree Orig DH"
+else if substr(data,q   ,1) = '04'x then say "Pedigree Orig Clearkey"
+else if substr(data,q   ,1) = '05'x then say "Pedigree Orig Clear text"
+else if substr(data,q   ,1) = '06'x then say "Pedigree Orig Derived"
+else if substr(data,q   ,1) = '07'x then say "Pedigree Orig from TKE"
+
+     if substr(data,q+1 ,1) = '00'x then say "Pedigree Cur: Unknown"
+else if substr(data,q+1 ,1) = '01'x then say "Pedigree Cur: other"
+else if substr(data,q+1 ,1) = '02'x then say "Pedigree Cur: Random"
+else if substr(data,q+1 ,1) = '03'x then say "Pedigree Cur: DH"
+else if substr(data,q+1 ,1) = '04'x then say "Pedigree Cur: Cleartext"
+else if substr(data,q+1 ,1) = '05'x then say "Pedigree Cur: Cleartext"
+else if substr(data,q+1 ,1) = '06'x then say "Pedigree Cur: Derived"
+else if substr(data,q+1 ,1) = '07'x then say "Pedigree Cur: CCA 05"
+else if substr(data,q+1 ,1) = '08'x then say "Pedigree Cur: CCA 05"
+else if substr(data,q+1 ,1) = '09'x then say "Pedigree Cur: CCA CV"
+else if substr(data,q+1 ,1) = '0A'x then say "Pedigree Cur: CCA NOCV"
+else if substr(data,q+1 ,1) = '0B'x then say "Pedigree Cur: CCA TR31 CV"
+else if substr(data,q+1 ,1) = '0C'x then say "Pedigree Cur: CCA TR31 NoCV"
+else if substr(data,q+1 ,1) = '0D'x then say "Pedigree Cur: PKCS 1.2 RSA"
+else if substr(data,q+1 ,1) = '0E'x then say "Pedigree Cur: PKCS OAEP"
+else if substr(data,q+1 ,1) = '0F'x then say "Pedigree Cur: PKA92 RSA"
+else if substr(data,q+1 ,1) = '10'x then say "Pedigree Cur: RSA ZERO-PAD"
+else if substr(data,q+1 ,1) = '11'x then say "Pedigree Cur: from CCA CV       "
+else if substr(data,q+1 ,1) = '12'x then say "Pedigree Cur: from CCA NOCV"
+else if substr(data,q+1 ,1) = '13'x then say "Pedigree Cur: from TKE "
+else if substr(data,q+1 ,1) = '14'x then say "Pedigree Cur: Exp CCA 05 ped"
+else if substr(data,q+1 ,1) = '15'x then say "Pedigree Cur: Exp CCA 05 No Ped"
+else if substr(data,q+1 ,1) = '16'x then say "Pedigree Cur: Exp  PKCSO OAEP"
+return 0 0
+/*************************************************************/
+cipher:
+x=dobit(substr(data,p+45,1),'80'x,"Use for Encryption" )
+x=dobit(substr(data,p+45,1),'40'x,"Use for Decryption" )
+x=dobit(substr(data,p+45,1),'20'x,"use for Translation" )
+
+     if substr(data,p+47,1) = '00'x then say "use for mode CBC "
+else if substr(data,p+47,1) = '01'x then say "use for mode ECB "
+else if substr(data,p+47,1) = '02'x then say "use for mode CFB "
+else if substr(data,p+47,1) = '03'x then say "use for mode OFB "
+else if substr(data,p+47,1) = '04'x then say "use for mode GCM "
+else if substr(data,p+47,1) = '05'x then say "use for mode XTS "
+else if substr(data,p+47,1) = '06'x then say "use for mode FF1 "
+else if substr(data,p+47,1) = '07'x then say "use for mode FF2 "
+else if substr(data,p+47,1) = '08'x then say "use for mode FF2.1"
+else if substr(data,p+47,1) = 'FF'x then say "use for mode ANY"
+
+return 0
+/*************************************************************/
+dobit:
+parse arg h,w,s
+if bitand(h,w) = w then say s
+return ''
