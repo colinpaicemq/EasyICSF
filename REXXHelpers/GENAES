@@ -1,0 +1,60 @@
+/* --------------------------------------------------------------- */
+/* generate an AES record from a passed skelton                    */
+/*                                                                 */
+/* --------------------------------------------------------------- */
+parse source . . me .
+parse arg label, Key
+data  =  x2c(key )
+lData =  d2c(length(data),4)
+
+/* local customisation */
+rule_count = d2c(2,4)
+rule_array = 'AES     '||'OP      '
+/*"constants"*/
+clear_bit_length = d2c(256,4)   /* 256-bit */
+key_type_1            = 'TOKEN   ';
+key_type_2            = '';
+lkey_id_1 = d2c(725,4) ; /* can be max size */
+key_id_1           = LEFT(data,725);
+lkey_id_2 = d2c(0,4)
+key_id_2                       = '';
+myrc = 'FFFFFFFF'x
+myrs = 'FFFFFFFF'x
+exit_length = '00000000'x
+exit_data = ''
+key_name_1_length       = '00000000'x;
+key_name_1              = '';
+key_name_2_length       = '00000000'x;
+key_name_2              = '';
+user_data_1_length = '00000000'x;
+user_data_1             = '';
+user_data_2_length = '00000000'x;
+user_data_2             = '';
+kek_id_1_length         = '00000000'x;
+kek_id_1                = '';
+kek_id_2_length         = '00000000'x;
+kek_id_2                = '';
+ADDRESS linkpgm 'CSNBKGN2' ,
+   'myrc'                            'myrs'                    ,
+   'exit_data_length'                'exit_data'               ,
+   'rule_count'                      'rule_array'              ,
+   'clear_bit_length'                                          ,
+   'key_type_1'                      'key_type_2'              ,
+   'key_name_1_length'               'key_name_1'              ,
+   'key_name_2_length'               'key_name_2'              ,
+   'user_data_1_length'              'user_data_1'             ,
+   'user_data_2_length'              'user_data_2'             ,
+   'kek_id_1_length'                 'kek_id_1'                ,
+   'kek_id_2_length'                 'kek_id_2'                ,
+   'lkey_id_1'                 'key_id_1' ,
+   'lkey_id_2'                 'key_id_2' ;
+myrc = c2d(myrc)
+myrs = c2d(myrs)
+IF (myrc <> 0 ) THEN
+  DO
+    SAY me 'CSNBKGN2 (rc='myrc' rs='myrs')' cprs(myrc,myrs)
+    RETURN myrs myrs
+  END
+
+key_1 =   LEFT(key_id_1,C2D(lkey_id_1));
+RETURN myrc myrs c2x(key_1)

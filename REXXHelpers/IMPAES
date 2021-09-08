@@ -1,0 +1,44 @@
+/* --------------------------------------------------------------- */
+/* delete from pkds                                                */
+/*                                                                 */
+/* --------------------------------------------------------------- */
+parse source . . me .
+parse arg label,private,Data
+say "IMPAES" label private
+data  =  x2c(Data)
+lData =  d2c(length(data),4)
+rule_count = d2c(2,4)
+rule_array = 'AES     '||'PKOAEP2 '||'SHA-256 '
+label =  LEFT(label ,64)
+lLabel = d2c(64,4)
+private= LEFT(private,64)
+lprivate= d2c(64,4)
+
+/* "constancts " */
+myrc = 'FFFFFFFF'x
+myrs = 'FFFFFFFF'x
+exit_length = d2c(0,4)
+exit_data = ''
+
+lOut      = d2c(725,4)
+out       = copies('00'x,725)
+
+ADDRESS LINKPGM "CSNDSYI2" ,
+   'myrc'                             'myrs'              ,
+   'exit_length'                      'exit_data'         ,
+   'rule_count'                       'rule_array'        ,
+   'lData'                            'data'              ,
+   'lPrivate'                         'private'           ,
+   'lLabel'                           'label'             ,
+   'lOut'                             'Out'
+myrc = c2d(myrc)
+myrs = c2d(myrs)
+IF (myrc <> 0 ) THEN
+  DO
+    SAY me 'CSNDSYI2(rc='myrc' rs='myrs')' cprs(myrc,myrs)
+    RETURN myrc myrs
+  END
+
+lData =  c2d(lout)
+RETURN myrc myrs   c2x(substr(out,1,lData))
+

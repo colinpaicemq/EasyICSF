@@ -1,0 +1,69 @@
+/* --------------------------------------------------------------- */
+/* CSNDPKB - PKA Key Token Build                                   */
+/* This uses ECC-PAIR                                              */
+/* Builds a skeleton key token which can be used as input for the  */
+/* key generate (CSNDPKG) callable service.                        */
+/* See the ICSF Application Programmer's Guide for more details.   */
+/* --------------------------------------------------------------- */
+/* Build the skeleton token for the Key Pair */
+/* Label passed in returns L'Token Token  */
+parse source . . me .
+parse arg label
+rule_count                     = d2c(2,4)
+rule_array                     = 'ECC-PAIR' ||,
+                                 'KEY-MGMT';
+lRule = length(rule_array)
+if lRule//8 <> 0  then
+do
+ say me "invalid rule:"rule_array
+ return 8 0
+end
+rule_count               = d2c(length(rule_array)/8,4)
+
+key_value_structure            = '00'x   ||,  /* Prime curve         */
+                                 '00'x   ||,  /* reserved            */
+                                 '0209'x ||,  /* P-521 curve in bits */
+                                 '0000'x ||,  /* length of d in bytes*/
+                                 '0000'x;     /* public key q, bytes */
+key_value_structure_length     = d2c(length(key_value_structure),4)
+private_key_name_length        = d2c(64,4)
+private_key_name               = left(label,64)
+token_length                   = d2c(3500,4)
+token                      = copies('00'x,3500);
+/* 'constants' */
+myrc = 'FFFFFFFF'x;
+myrs = 'FFFFFFFF'x;
+exit_data_length      = '00000000'x;
+exit_data      = '';
+reserved_1_length = '00000000'x;
+reserved_1 = '';
+reserved_2_length = '00000000'x;
+reserved_2 = '';
+reserved_3_length = '00000000'x;
+reserved_3 = '';
+reserved_4_length = '00000000'x;
+reserved_4 = '';
+reserved_5_length = '00000000'x;
+reserved_5 = '';
+ADDRESS linkpgm "CSNDPKB",
+   'myrc'                           'myrs'                       ,
+   'exit_data_length'               'exit_data'                  ,
+   'rule_count'                     'rule_array'                 ,
+   'key_value_structure_length' 'key_value_structure'            ,
+   'private_key_name_length'        'private_key_name'           ,
+   'reserved_1_length'              'reserved_1'                 ,
+   'reserved_2_length'              'reserved_2'                 ,
+   'reserved_3_length'              'reserved_3'                 ,
+   'reserved_4_length'              'reserved_4'                 ,
+   'reserved_5_length'              'reserved_5'                 ,
+   'token_length'                   'token'                  ;
+myrc = c2d(myrc)
+myrs = c2d(myrs)
+IF (myrc <> 0) THEN
+  DO
+   say me 'CSNDPKB  Failed (rc=' myrc' rs='myrs')' cprs(myrc,myrs)
+    RETURN  myrc myrs
+  END
+
+lData = c2d(token_length)
+RETURN myrc myrs  c2x(substr(token,1,lData))

@@ -1,0 +1,42 @@
+/* exec to give back reason code string from passed value */
+parse arg rc,rs
+v.= "Not listed" rs
+v.0  ="OK"
+v.155="The value that the generated_key_identifier parameter"||,
+      "  specifies is not valid"
+v.762="The key values structure for CSNDPKB has a field in error"||,
+            " A length or format is not correct"
+v.2012="The rule_array_count parameter contains a" ||,
+           " number that is not valid."
+v.2016="The rule_array parameter contents are incorrect"
+v.2040="Wrong key type internal/external"
+v.2054="RSA:OAEP optional encoding parameters failed validation"
+v.2055="The RSA public key is too small to encrypt the DES key"
+v.2089="The algorithm does not match the algorithm"||,
+           " of the key identifier"
+v.2141="A key verification pattern failed to verify"||,
+       "Check importer|exporter key"
+v.2154="At least one key token passed to this callable service "||,
+       "does not have the required key type for the specified function"
+v.3529="A key identifier was supplied to a callable service as a key"||,
+       "token or thee label of a key token in a key data set. "||,
+        " Perhaps the label does not exist"
+v.10012="Key not found"
+v.10036="A Key is not valid"
+v.10040="Key identifiers contain a version number"
+v.10048="The key_type parameter does not contain one of the valid"||,
+           " types for the service or the keyword TOKEN"
+v.10124="The key identifier you supplied cannot be exported because" ||,
+           "there is a a prohibit-export restriction on the key"
+v.10126="rule_array parameter is not consistent"
+v.11000="Invalid length for a key token, key, or text field"
+v.11040="Inconsistent formatting method (eg PKA92) used        "
+v.11056="The input PKA token contains " ||,
+            "length fields that are not valid"
+v.16000="Authorization problem"
+v.16004="RACF failed your request to use the key label or token"
+v.16024="Key token is not valid"
+v.16032="Invalid label name"
+v.16036="Record already exists in the database"
+v.16056="The coprocessor failed"
+return v.rs

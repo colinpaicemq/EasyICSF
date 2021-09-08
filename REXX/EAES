@@ -1,0 +1,38 @@
+/* Rexx */
+/* export a AES variable format */
+signal on novalue
+parse source . .  me .
+parse upper arg   . "-KEY" key .
+parse upper arg   . "-PUBLIC"  public .
+trace e
+if ( key   =  ""| public = "" ) then
+do
+   say "syntax is  -KEY key  -PUBLIC label      "
+   return 8
+end
+say me "Export AES " key "using Public "public
+/*********************************************************************/
+rc = existspk(public)
+parse var rc myrc myrs .
+say me "exists PKDS " strip(public) myrc myrs cprs(myrc,myrs)
+if myrc <> 0 then return myrc
+
+rc = existsck(key)
+parse var rc myrc myrs .
+say me "exists CKDS " strip(key) myrc myrs cprs(myrc,myrs)
+if myrc <> 0 then return myrc
+
+rc = EXPAES(key,public)
+parse var rc myrc myrs eKey
+if myrc <> 0 then return myrc
+
+out.0 = 1
+out.1 = X2C(eKey) /* in binary */
+"EXECIO * DISKW EXPORT (STEM out. OPEN FINIS"
+if ( rc <> 0) then
+do
+ say "Return code from EXECIO write to //EXPORT "rc
+ return 8
+end
+
+say me "export "key ','  myrc myrs cprs(myrc,myrs)

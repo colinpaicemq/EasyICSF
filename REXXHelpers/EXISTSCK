@@ -1,0 +1,13 @@
+/* --------------------------------------------------------------- */
+/* exists see if label exiss in pkds                               */
+/* --------------------------------------------------------------- */
+/* These parameters are passed in            */
+parse source . . me .
+parse arg label .
+rc = readcks(label)
+parse var rc myrc myrs .
+if (myrc = 0) then
+say me "exists ckds" strip(label) myrc myrs cprs(myrc,myrs)
+else
+say me "does not exist ckds" strip(lable) myrc myrs cprs(myrc,myrs)
+return myrc myrs

@@ -1,0 +1,51 @@
+/* --------------------------------------------------------------- */
+/* CSNDPKG - PKI Generate                                          */
+/* --------------------------------------------------------------- */
+/* These parameters are passed in            */
+parse source . . me .
+parse arg label,Skel
+Skel  =  x2c(Skel)
+say me "length2" length(skel)
+lSkel =  d2c(length(Skel),4)
+label = left(LABEL,64)
+/* these parameters are function dependant   */
+rule_count                     = d2c(1,4)
+rule_array                     = 'MASTER  '
+/*
+rule_array                     = 'MASTER  ' ||,
+                                 'KEY-AES ';
+*/
+/* can be anything ...  */
+regeneration_data_length           = '00000000'x
+regeneration_data                  = ''
+transport_key_identifier           = COPIES('00'x,64)
+generated_key_token                = COPIES('00'x,6500)
+generated_key_token_length         = d2c(6500,4)
+
+myrc            = 'FFFFFFFF'x
+myrs            = 'FFFFFFFF'x
+exit_length = '00000000'x
+exit_data       = ''
+
+ADDRESS linkpgm "CSNDPKG",
+   'myrc'                            'myrs'                   ,
+   'exit_length'                     'exit_data'              ,
+   'rule_count'                      'rule_array'             ,
+   'regeneration_data_length'        'regeneration_data'      ,
+   'lSkel'                           'Skel'                   ,
+   'transport_key_identifier'                                 ,
+   'generated_key_token_length'      'generated_key_token'
+
+myrc = C2d(myrc)
+myrs = C2d(myrs)
+say "rc  = "myrc myrs
+IF (RC <> 0 )          Then
+  DO
+    SAY me 'CSNDPKG Failed (rc='myrc' rs='myrs')' ,
+    cprs(myrc,myrs )
+    return myrc myrs
+    EXIT
+  END
+lData = c2d(generated_key_token_length)
+say me "outlen "ldata
+RETURN myrc myrs   c2x(substr(generated_key_token,1,lData))

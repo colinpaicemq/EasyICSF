@@ -1,0 +1,43 @@
+/* --------------------------------------------------------------- */
+/* CSNDPKG - PKA Generate                                          */
+/* --------------------------------------------------------------- */
+/* These parameters are passed in            */
+parse source . . me .
+parse arg label
+generated_key_token                = left(label,64)
+
+label = left(label,64)
+/* these parameters are function dependant   */
+rule_count                     = d2c(0,4)
+/*
+rule_array                     = 'MASTER  ' ||,
+                                 'KEY-AES ';
+*/
+rule_array                     = ''
+/* can be anything ...  */
+Token                              = COPIES('00'x,6500)
+lToken                             = d2c(6500,4)
+
+myrc            = 'FFFFFFFF'x
+myrs            = 'FFFFFFFF'x
+exit_length = d2c(0,4)
+exit_data       = ''
+
+ADDRESS linkpgm "CSNDKRR",
+   'myrc'                            'myrs'                   ,
+   'exit_length'                     'exit_data'              ,
+   'rule_count'                      'rule_array'             ,
+   'label' ,
+   'lToken'                          'Token'
+
+myrc = C2d(myrc)
+myrs = C2d(myrs)
+say "rc  = "myrc myrs
+IF (RC <> 0 )          Then
+  DO
+    SAY me 'CSNBKRR2 Failed (rc='myrc' rs='myrs')' cprs(myrc,myrs )
+    return myrc myrs
+    EXIT
+  END
+
+RETURN myrc myrs c2x(Token)

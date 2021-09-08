@@ -1,0 +1,68 @@
+/* --------------------------------------------------------------- */
+/* generate an AES using                                           */
+/*                                                                 */
+/* CSNBKTB2 - Key Token Build2                                     */
+/*                                                                 */
+/* --------------------------------------------------------------- */
+parse source . .  me  .
+parse arg type .
+/* parameters passed in */
+type = substr(type,1,1)
+/*"constants"*/
+myrc = 'FFFFFFFF'x
+myrs = 'FFFFFFFF'x
+exit_length =  d2c(0,4);
+exit_data = ''
+rule_count = d2c(3,4)
+if type = 'I' then
+  rule_array = 'INTERNAL'||'AES     '||'IMPORTER'||'ANY-MODE'||'XPRTCPAC'
+
+else,
+if type = 'E' then
+  rule_array = 'INTERNAL'||'AES     '||'EXPORTER'
+
+else,
+if type = 'C' then
+  rule_array = 'INTERNAL'||'AES     '||'CIPHER  '||'ANY-MODE'||'XPRTCPAC'
+lRule = length(rule_array)
+if lRule//8 <> 0  then
+do
+ say me "invalid rule:"rule_array
+ return 8 0
+end
+rule_count               = d2c(length(rule_array)/8,4)
+lKey                     = d2c(725,4)
+Key                      = COPIES('00'x,725)
+key_bit_length           = '00000000'x
+key_value                = ''
+key_name_length          = '00000000'x
+key_name                 = ''
+user_data_length         = '00000000'x
+user_data                = ''
+token_data_length        = '00000000'x
+token_data               = ''
+service_data_length = '00000000'x
+service_data             = ''
+ADDRESS linkpgm "CSNBKTB2",
+   'myrc'                         'myrs'                  ,
+   'exit_data_length'             'exit_data'             ,
+   'rule_count'                   'rule_array'            ,
+   'key_bit_length'               'key_value'             ,
+   'key_name_length'              'key_name'              ,
+   'user_data_length'             'user_data'             ,
+   'token_data_length'            'token_data'            ,
+   'service_data_length'          'service_data'          ,
+   'lKey'                         'Key'
+
+
+myrc = c2d(myrc)
+myrs = c2d(myrs)
+IF (myrc <> 0 ) THEN
+  DO
+    SAY me 'CSNBKTB2 (rc='myrc' rs='myrs')' cprs(myrc,myrs)
+    RETURN myrc myrs
+  END
+key = LEFT(key,C2D(lkey));
+
+RETURN myrc myrs c2x(Key)
+

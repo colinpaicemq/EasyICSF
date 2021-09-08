@@ -1,0 +1,42 @@
+/* Rexx */
+/*********************************************************************/
+/* High level rexx to generate a PKI                                 */
+/* this uses QSA-PAIR                                                */
+/*********************************************************************/
+parse source . . me .
+signal on novalue
+parse upper arg   . "-KEY" label .
+parse upper arg args
+if ( wordpos("-REPLACE",args) > 0) then replace="Y"
+else replace="NO"
+trace e
+if ( label =  "") then
+do
+   say "syntax is  -KEY key <-Replace>          "
+   return 8
+end
+/*********************************************************************/
+/* Generate a PKI                                                    */
+/* This returns rc rs and PKI skeleton                               */
+/*********************************************************************/
+rc = PKISKELQ(label)
+parse var rc myrc myrs Key
+if myrc <> 0 then return myrc
+say "lKey" length(key)
+say "IQ 1:" length(key)/2
+/*********************************************************************/
+/* Generate the key using the skeleton                               */
+/*********************************************************************/
+rc= PKIGEN(label,Key)
+parse var rc myrc myrs Data
+if myrc <> 0 then return myrc
+
+rc = qsaprint(data)
+/*********************************************************************/
+/* add it to the PKDS                                                */
+/*********************************************************************/
+say me "keys size " length(data)/2
+rc = addpkds(label,Data,replace)
+parse var rc myrc myrs Data
+if myrc <> 0 then return myrc
+return 0

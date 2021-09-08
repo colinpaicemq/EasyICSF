@@ -1,0 +1,56 @@
+/* --------------------------------------------------------------- */
+/* add ckds  CSNBKRC2                                              */
+/* input, label and the blob                                       */
+/* --------------------------------------------------------------- */
+parse source . .  me .
+parse arg label,token,replace
+token =x2c(token)
+lToken= d2c(length(token),4)
+label =  LEFT(label,64)
+/* try adding it - it may get already exists */
+x = addit()
+parse var x myrc myrs
+/* if record already exists and replace not specified return */
+if (myrs = 16036 &substr(replace,1,1) <> 'Y') then
+do
+  say "Record for "key " exists, and -replace was not specified:",
+   replace
+  return x cprs(myrc,myrs)
+end
+if (myrs = 16036 &substr(replace,1,1) = 'Y') then
+do;
+  rc = delckds(label)
+  x = addit()
+  parse var x myrc myrs
+end;
+say "return from "me myrc myrs cprs(myrc,myrs)
+return x  cprs(myrc,myrs)
+
+/* --------------------------------------------------------------- */
+/* add it */
+/* --------------------------------------------------------------- */
+addit:
+/* "constants" */
+myrc = 'FFFFFFFF'x
+myrs = 'FFFFFFFF'x
+exit_length = '00000000'x
+exit_data = ''
+rule_count = '00000000'x
+rule_array = ''
+
+ADDRESS LINKPGM "CSNBKRC2",
+   'myrc'                             'myrs'                  ,
+   'exit_length'                      'exit_data'             ,
+   'rule_count'                       'rule_array'            ,
+   'label'                                                    ,
+   'lToken'                           'token'
+myrc = c2d(myrc)
+myrs = c2d(myrs)
+say "addckds " myrc myrs  cprs(myrc,myrs)
+IF (rc <> 0 & myrs <> 16036  ) THEN /* not found */
+  DO
+    SAY me strip(label) '(rc='myrc' rs='myrs')' cprs(myrc,myrs)
+    RETURN myrc myrs
+  END
+
+RETURN myrc myrs

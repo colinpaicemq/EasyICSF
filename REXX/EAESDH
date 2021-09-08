@@ -1,0 +1,26 @@
+/* Rexx */
+/* export a AES variable format */
+signal on novalue
+parse upper arg   . "-KEY" key .
+parse upper arg   . "-PUBLIC"  public .
+trace e
+if ( key   =  ""| public = "" ) then
+do
+   say "syntax is  -KEY key  -PUBLIC label      "
+   return 8
+end
+say "Export AES key using Public label "
+/*********************************************************************/
+rc = EXPAESE(key,public)
+parse var rc myrc myrs Key
+say myrc myrs
+if myrc <> 0 then return rc
+
+out.0 = 1
+out.1 = X2C(Key) /* in binary */
+"EXECIO * DISKW EXPORT (STEM out. OPEN FINIS"
+if ( rc <> 0) then
+do
+ say "Return code from EXECIO write to //EXPORT "rc
+end
+

@@ -1,0 +1,44 @@
+/* Rexx */
+/*********************************************************************/
+/* High level rexx to import an AES varkey (eg CIPHER)               */
+/* It reads it from //EXPORT DD                                      */
+/*********************************************************************/
+/* import an AES key */
+signal on novalue
+parse upper arg   . "-KEY" label .
+parse upper arg   . "-PRIVATE"  private .
+parse upper arg  args
+trace e
+if ( label =  ""| private  = "" ) then
+do
+   say "syntax is  -KEY key  -PRIVATE label <-REPLACE>"
+   return 8
+end
+if ( wordpos("-REPLACE",args) > 0) then replace="Y"
+else replace="NO"
+
+trace e
+"EXECIO * DISKR IMPORT (STEM in. OPEN FINIS"
+if ( rc <> 0) then
+do
+ say "Return code from EXECIO read to //IMPORT "rc
+ return rc;
+end
+if ( in.0 > 1) then
+do
+  say "unexpected file.  More than 1 record " in.0
+  return 8
+end
+/* Convert to binary to hex version.. for passing around  */
+data =c2x(in.1)
+rc = impAESe(label,private,Data)
+parse var rc myrc myrs Out
+if myrc <> 0 then return myrc
+
+/* and add it in to the CKDS */
+rc = addckds(label,Out ,replace)
+parse var rc myrc myrs .
+say "IAES addckds " strip(label) myrc myrs  cprs(myrc,myrs)
+if myrc <> 0 then return myrc
+
+return 0

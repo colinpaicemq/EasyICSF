@@ -1,0 +1,31 @@
+/* Rexx */
+/* export a PKI key */
+signal on novalue
+parse upper arg   . "-KEY" key .
+parse upper arg args
+if ( wordpos("-REPLACE",args) > 0) then replace="Y"
+else replace="NO"
+
+trace e
+if ( key   =  "") then
+do
+   say "syntax is  -KEY key   -replace          "
+   return 8
+end
+"EXECIO * DISKR IMPORT (STEM in. OPEN FINIS"
+if ( rc <> 0) then
+do
+ say "Return code from EXECIO read to //IMPORT "rc
+ return rc;
+end
+if ( in.0 > 1) then
+do
+  say "unexpected file.  More than 1 record " in.0
+  return 8
+end
+data =c2x(in.1)
+rc = addpkds(key ,Data,replace)
+parse var rc myrc myrs Key
+say "IPKI addpkds " myrc myrs  cprs(myrc,myrs)
+if myrc <> 0 then return myrc
+return 0

@@ -1,0 +1,44 @@
+/* --------------------------------------------------------------- */
+/* export aes  cipher from CKDS                                    */
+/* input label name, and name of public certificate in PKDS        */
+/* returns rc rs, and the data                                     */
+/* uses  CSNDSYX                                                   */
+/* --------------------------------------------------------------- */
+parse source . .  me .
+parse arg label,public
+say "EXPAES" label public
+rule_count = d2c(3,4)
+rule_array = 'AES     '||'PKOAEP2 '||'SHA-256 '
+label =  LEFT(label ,64)
+lLabel = '00000040'x
+public=  LEFT(public,64)
+lpublic= '00000040'x
+/* "constancts " */
+myrc = 'FFFFFFFF'x
+myrs = 'FFFFFFFF'x
+exit_length = '00000000'x
+exit_data = ''
+
+out   = COPIES('00'x,900 )
+lOut =     '00000384'x
+
+say "public:"public
+say "label :"label
+ADDRESS LINKPGM "CSNDSYX",
+   'myrc'                             'myrs'              ,
+   'exit_length'                      'exit_data'         ,
+   'rule_count'                       'rule_array'        ,
+   'llabel'                           'label'             ,
+   'lpublic'                          'public'            ,
+   'lOut'                             'Out'
+
+myrc = c2d(myrc)
+myrs = c2d(myrs)
+IF (myrc <> 0 ) THEN
+  DO
+    SAY me 'CSNDSYX (rc='myrc' rs='myrs')' cprs(myrc,myrs)
+    RETURN myrc myrs
+  END
+lData =  c2d(lout)
+RETURN myrc myrs c2x(substr(out,1,lData))
+

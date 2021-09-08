@@ -1,0 +1,31 @@
+/* --------------------------------------------------------------- */
+/* delete from Ckds    >B<KRD                                      */
+/*                                                                 */
+/* --------------------------------------------------------------- */
+parse source . . me  .
+parse arg label
+rc = 'FFFFFFFF'x
+rs = 'FFFFFFFF'x
+exit_length = '00000000'x
+exit_data = ''
+rule_count = '00000001'x
+rule_array = 'LABEL-DL'
+label =  LEFT(label ,64)
+
+ADDRESS LINKPGM "CSNBKRD",
+   'myrc'                             'myrs'                    ,
+   'exit_length'                      'exit_data'             ,
+   'rule_count'                       'rule_array'            ,
+   'label'
+
+myrc = c2d(myrc)
+myrs = c2d(myrs)
+say me strip(label) myrc myrs cprs(myrc,myrs)
+IF (myrc <> 0 ) THEN
+  DO
+    SAY me 'CSNBKRD  (rc='myrc' rs='myrs')' cprs(myrc,myrs)
+    RETURN myrs myrs
+  END
+
+RETURN myrc myrs
+

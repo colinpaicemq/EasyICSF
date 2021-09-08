@@ -1,0 +1,75 @@
+/* --------------------------------------------------------------- */
+/* generate an AES record using DH, and private+public key         */
+/* input private public keys, and the skeleton data                */
+/* --------------------------------------------------------------- */
+parse source . . me .
+parse arg private,public,Data
+private = left(private,64)
+public  = left(public,64)
+data    = x2c(data)
+lData   = d2c(length(data),4)
+/* string must be 900 chars long  */
+lOutput = d2c(900,4)
+output  = data|| COPIES('00'x,900-length(data))
+
+lPrivate = d2c(64,4)
+lPublic  = d2c(64,4)
+
+/* local customisation */
+rule_count = d2c(2,4)
+rule_array = 'DERIV01 '||'KEY-AES '
+/*"constants"*/
+key_bit_length = d2c(256,4)  /* 256-bit */
+
+randomString = 'COLINS-id'
+lRandomString = d2c(length(randomString),4)
+
+myrc = 'FFFFFFFF'x
+myrs = 'FFFFFFFF'x
+exit_length = '00000000'x
+exit_data = ''
+lKEK                    = '00000000'x;
+KEK                     = '';
+lChaining               = '00000000'x;
+Chaining                = '';
+lReserved1              = '00000000'x;
+Reserverd1              = '';
+lReserved2              = '00000000'x;
+Reserverd2              = '';
+lReserved3              = '00000000'x;
+Reserverd3              = '';
+lReserved4              = '00000000'x;
+Reserverd4              = '';
+lReserved5              = '00000000'x;
+Reserverd6              = '';
+lOutputKEK              = '00000000'x;
+OutputKEK               = '';
+
+ADDRESS linkpgm 'CSNDEDH' ,
+   'myrc'                            'myrs'                    ,
+   'exit_data_length'                'exit_data'               ,
+   'rule_count'                      'rule_array'              ,
+                                                               ,
+   'lPrivate'                        'private'                 ,
+   'lKEK'                            'KEK'                     ,
+   'lPublic'                         'public'                  ,
+   'lChaining'                       'Chaining'                ,
+                                                               ,
+   'lRandomstring'                   'Randomstring'            ,
+   'key_bit_length'                                            ,
+   'lReserved1'                      'reserved1'               ,
+   'lReserved2'                      'reserved2'               ,
+   'lReserved3'                      'reserved3'               ,
+   'lReserved4'                      'reserved4'               ,
+   'lReserved5'                      'reserved5'               ,
+   'lOutputKEK'                      'OutputKEK'               ,
+   'lOutput'                         'Output'
+myrc = c2d(myrc)
+myrs = c2d(myrs)
+IF (myrc <> 0 ) THEN
+  DO
+    SAY me 'CSNDEDH  (rc='myrc' rs='myrs')' cprs(myrc,myrs)
+    RETURN myrs myrs
+  END
+output = LEFT(Output,C2D(lOutput));
+RETURN myrc myrs c2x(Output)

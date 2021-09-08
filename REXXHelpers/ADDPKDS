@@ -1,0 +1,58 @@
+/* --------------------------------------------------------------- */
+/* CSNBKRC2 - Key Record Create2                                   */
+/* Input label and the string                                      */
+/* --------------------------------------------------------------- */
+parse source . . me .
+parse arg label, token, replace
+token =x2c(token)
+lToken = d2c(5860,4)
+lToken = d2c(length(token),4)
+/* long label  */
+lLabel =  LEFT(label ,64)
+say "ADD" c2x(substr(token,1,30   ))
+x = addit()
+parse var x myrc myrs
+/* if record already exists and replace not specified return */
+if (myrs = 16036 &substr(replace,1,1) <> 'Y') then
+do
+  say "Record for "key " exists, and -replace was not specified:",
+   replace
+  return x  cprs(myrc,myrs)
+end
+if (myrs = 16036 &substr(replace,1,1) = 'Y') then
+do;
+  rc = delpkds(lLabel)
+  x = addit()
+  parse var x myrc myrs
+end;
+say "return from " me myrc myrs
+return x  cprs(myrc,myrs)
+/* --------------------------------------------------------------- */
+/* add it */
+/* --------------------------------------------------------------- */
+addit:
+rc = 'FFFFFFFF'x
+rs = 'FFFFFFFF'x
+exit_length = '00000000'x
+exit_data = ''
+rule_count = '00000000'x
+rule_array = ''
+say "addpkds length label,token" length(lLAbel) length(token) c2d(lToken)
+ADDRESS LINKPGM "CSNDKRC",
+   'myrc'                             'myrs'                    ,
+   'exit_length'                      'exit_data'             ,
+   'rule_count'                       'rule_array'            ,
+   'lLabel'                                                   ,
+   'lToken'                          'token'
+
+myrc = c2d(myrc)
+myrs = c2d(myrs)
+say "addpkds " myrc myrs cprs(myrc,myrs)
+IF (rc <> 0 & myrs <> 16036  ) THEN /* not found */
+  DO
+    SAY me strip(label) '(rc='myrc' rs='myrs')' cprs(myrc,myrs)
+    RETURN myrc myrs
+  END
+
+RETURN myrc myrs
+

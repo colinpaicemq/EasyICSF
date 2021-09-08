@@ -1,0 +1,63 @@
+/* routine to format a QSA   */
+/* input the hex data        */
+/* table 589 page 1379 - header   */
+/* table 608 page 1405 - QSAI priv*/
+/* table 609 page 1408 - QSAI pub */
+/*  1F0016E40000000050000FA000360000         */
+parse source . . me .
+trace e
+parse arg data
+data = x2c(data)
+p = 1 /* pointer to the base data */
+if substr(data,p+0,1) = '1f'x then say "internal header"
+else ,
+if substr(data,p+0,1) = '1E'x then say "external header"
+else ,
+do
+  say "unexpected QSA header " c2x(substr(data,1,1))
+  return 8
+end
+lTotal = c2d(substr(data,p+2,2))
+say "total length " lTotal
+p =1 + 8 /* size of header */
+if  substr(data,p+0,1) = '50'x then
+p      = p+       qsapriv(offset)
+if  substr(data,p+0,1) = '51'x then
+p      = p+       qsapub()
+return 0
+qsapriv:
+say "===QSA PRIVATE=="
+l = c2d(substr(data,p+2,2))      /* length */
+say "QSA Priv length " l
+     if substr(data,p+9,1) = '00'x then say "not algorithm"
+else if substr(data,p+9,1) = '01'x then say "Crystal-Dil"
+     if substr(data,p+10,2) = '0605'x then say "CD 06.05        "
+
+     if substr(data,p+12,1) = '00'x then say "Unenc QSA priv"
+else if substr(data,p+12,1) = '01'x then say "enc QSA priv"
+
+     if substr(data,p+13,1) = '00'x then say "No key"
+else if substr(data,p+13,1) = '21'x then say "Import from cleartext"
+else if substr(data,p+13,1) = '22'x then say "Import from ciphertxt"
+else if substr(data,p+13,1) = '24'x then say "Randomly generated"
+
+     if substr(data,p+15,1) = '00'x then say "hash Clear key"
+else if substr(data,p+15,1) = '22'x then say "Hash SHA-256d"
+ say "aaa qsa payload comp 1 length" c2d(substr(data,p+50,2))
+ say "bbb qsa payload comp 2 length" c2d(substr(data,p+52,2))
+ say "ccc qsa payload comp 3 length" c2d(substr(data,p+54,2))
+ say "ddd qsa payload comp 4 length" c2d(substr(data,p+56,2))
+ say "eee qsa payload comp 5 length" c2d(substr(data,p+58,2))
+return l
+
+qsapub:
+say "===QSA PUBLIC==="
+l = c2d(substr(data,p+2,2))      /* length */
+say "QSA pub length" l
+     if substr(data,p+4,1) = '00'x then say "no MAC"
+     if substr(data,p+5,1) = '00'x then say "no algorithm"
+else if substr(data,p+5,1) = '01'x then say "Crystal-Dil"
+     if substr(data,p+6 ,2) = '0605'x then say "CD 06.05        "
+say "aaa qsa payload comp 1 length" c2d(substr(data,p+10,2))
+say "bbb qsa payload comp 2 length" c2d(substr(data,p+12,2))
+return l;
