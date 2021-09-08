@@ -61,7 +61,6 @@ When passing key data around it is passed - coverted to Hex. This prevents probl
 - IMPAESE  - Import an AES key encryped with Exporter key.  
     - Parameters label to put into key,name of importer key, blob of input data. 
     - Returns rc rs blob of data encrypted with local key.
-- IMPPKI  - Import a PKI public key. Parameters  ??
 - PKIGEN  - Generate a PKI key.  
      - Parameters, label, blob of data from skeleton.  
      - Returns rc rc blob.
