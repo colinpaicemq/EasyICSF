@@ -1,9 +1,10 @@
-//COLEXP  JOB 'COLIN',CLASS=A,NOTIFY=&SYSUID,REGION=0M,COND=(4,LE)
+//COLEXP  JOB 'COLIN',CLASS=A,REGION=0M,COND=(4,LE)
 //JOBLIB JCLLIB ORDER=(COLIN.ICSF.C.JCL,CBC.SCCNPRC)
-//EXPAESP    EXEC  CCPROC,PROG=EXPAESP
-//*
-//ISTEST   EXEC PGM=EXPAESP,REGION=0M,
-//   PARM='-key  AESDATA1 -dd DD:AES -public  RSA2    '
+//EXPAES     EXEC  CCPROC,PROG=EXPAES
+//ISTEST   EXEC PGM=EXPAES,REGION=0M,
+//*  PARM='-key REXXAES   -dd DD:AES -public  RSA2 -type D'
+//   PARM='-key REXXAES   -dd DD:AES -public  RSA2PUB -type C'
+//*  PARM='-key  AESCI   -dd DD:AES -public  RSA2 -type C'
 //*  PARM='-key  AESDATA1 -dd public -encrypt RSA1    '
 //*  PARM='-key  AESCI   -dd public -encrypt RSA1PUB   '
 //*  PARM='-key  AESCI   -dd public -encrypt RSA1PUB   '

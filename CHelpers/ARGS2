@@ -1,3 +1,5 @@
+#ifndef ARGS2_INCLUDE
+#define ARGS2_INCLUDE
 int  readArgs(int argc, char *argv??(??),char * name,int len   ,
 char ** addr,char * flags)
 {
@@ -45,3 +47,4 @@ char ** addr,char * flags)
   *addr = "";
   return 9;
 }
+#endif

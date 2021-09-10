@@ -1,3 +1,5 @@
+#ifndef KEYGENP_INCLUDE
+#define KEYGENP_INCLUDE
 int keyGENP(char * pPublic, // name of the public key
   char **ppLocal, int * lpLocal, // addr(addr local ), addr(len(local))
   char **ppExt  , int * lpExt ) // ditto encrypted
@@ -57,3 +59,4 @@ int keyGENP(char * pPublic, // name of the public key
    //======================================
 return rc;
 }
+#endif

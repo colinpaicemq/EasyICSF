@@ -1,7 +1,7 @@
-/* --------------------------------------------------------------- */
-/* --------------------------------------------------------------- */
+#ifndef DOIMPDAT_INCLUDE
+#define DOIMPDAT_INCLUDE
 #include <do64.h>
-int doImpDat(char * pUnusedKey, char * pPrivate, char * pType,
+int importData(char * pUnusedKey, char * pPrivate, char * pType,
     char ** pData, int * lData)
 {
   //  CSNDSYI
@@ -24,14 +24,11 @@ int doImpDat(char * pUnusedKey, char * pPrivate, char * pType,
   char * pOutput = (char * ) malloc(lOutput);
   if ( pOutput == 0)
   {
-    printf("malloc for %i failed in IMPAES\n",lOutput);
+    printf("malloc for %i failed in IMPDAT\n",lOutput);
   }
 //printf("Key Name %s.\n",pKey);
-  printf("Private Key %s.\n",pPrivate);
-  printf("Type %s\n",pType);
-  printf("lInput  %i\n",*lData     );
-  printf("lOutput %i\n",lOutput    );
-  int l0 = 0;
+  printf("ImportData Private Key %s.\n",pPrivate);
+  printf("ImportData Type %s\n",pType);
   CSNDSYI (
             &rc  ,               /* return code         */
             &rs  ,               /* reason code         */
@@ -58,4 +55,4 @@ int doImpDat(char * pUnusedKey, char * pPrivate, char * pType,
    *lData = lOutput;
  return 0;
  }
-// ==========================================
+#endif

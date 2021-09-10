@@ -8,9 +8,9 @@
 typedef char    char8[8];
 #include <args2.h>  // colin special
 #include <impaesh.h>  // colin special
+// #include <IMPCIP.h>  // colin special
 #include <do64.h> // colin special
 #include <addckds.h> // colin special
-// #include <readcert.h>   // colin special
 #include <exists.h>     // colin special
 #include </usr/include/csfbext.h>
 // int doImportAES (char * pKey, char * pDecryptKey,
@@ -45,7 +45,7 @@ int main( int argc, char *argv??(??))
   char * pData;
 
   rc=  read(dd,&pData,&lData);         // returns a buffer
-  printf("read rc %i data length %i\n",rc,lData );
+//printf("read rc %i data length %i\n",rc,lData );
   if ( rc != 0) return 8;
 
   rc = doImportAES(pKey,pPrivate,pType,&pData,&lData);

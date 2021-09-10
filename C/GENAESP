@@ -13,8 +13,7 @@ typedef char    char8[8];
 #include <args2.h>  // colin special
 #include <imppub.h >  // colin special
 
-#include <delete2.h>  // colin special
-#include <add2.h>  // colin special
+#include <addckds.h>  // colin special
 // #include <impaesh.h> // colin special
 #include <keyGENP.h> // colin special
 #include </usr/include/csfbext.h>

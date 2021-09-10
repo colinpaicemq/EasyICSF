@@ -9,7 +9,6 @@ typedef char    char8[8];
 #include <addckds.h>  // colin special
 #include <args2.h>  // colin special
 #include <do64.h>  // colin special
-//#include <delete2.h>// colin special
 #include <printAES.h>  // colin special
 #include <skelaes.h>  // colin special
 #include <keyaes.h>  // colin special

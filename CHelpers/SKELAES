@@ -1,3 +1,5 @@
+#ifndef SKELAES_INCLUDE
+#define SKELAES_INCLUDE
 #include <printAESS.h> // colin special
 int skeletonAES(char ** pData, int * lData)
 {
@@ -53,6 +55,7 @@ int skeletonAES(char ** pData, int * lData)
  *pData = pKeyToken;
  printf("skeletonAES key length %i\n",lKeyToken);
 // printHex(stdout,&keyToken,lKeyToken);
-   printAES((char *) pKeyToken,lKeyToken);
+   printAES((char *) pKeyToken,lKeyToken,stdout);
    return 0;
 }
+#endif

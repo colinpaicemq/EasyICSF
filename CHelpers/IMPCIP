@@ -1,4 +1,6 @@
-int doImpCip(char * pKey, char * pPrivate, char * pUnused,
+#ifndef DOIMPCIP_INCLUDE
+#define DOIMPCIP_INCLUDE
+int importCipher(char * pKey, char * pPrivate, char * pUnused,
     char ** pData, int * lData)
 {
   //  CSNDSYI2
@@ -6,7 +8,6 @@ int doImpCip(char * pKey, char * pPrivate, char * pUnused,
   int rs;
   int zero = 0;
   int i64 = 64;
-  int rule_count                 =  2;
   // make these char 64
   do64(Priv,pPrivate) ;
   do64(myKey ,pKey    );
@@ -15,6 +16,7 @@ int doImpCip(char * pKey, char * pPrivate, char * pUnused,
                        {"AES     ",
                         "PKOAEP2 ",
                         "SHA-256 "};
+  int rule_count                 =  2;
   //                   {"AES     ",
   //                    "PKCS-1.2"};
   pRule = &rule_Data[0][0];
@@ -24,8 +26,8 @@ int doImpCip(char * pKey, char * pPrivate, char * pUnused,
   {
     printf("malloc for %i failed in IMPAES\n",lOutput);
   }
-  printf("Key Name %s.\n",pKey);
-  printf("Private Key %s.\n",pPriv   );
+  printf("importCipher Key Name %s.\n",pKey);
+  printf("importCipher Private Key %s.\n",pPrivate);
   int l0 = 0;
   CSNDSYI2 (
               &rc,                /* return code            */
@@ -54,3 +56,4 @@ int doImpCip(char * pKey, char * pPrivate, char * pUnused,
    *lData = lOutput;
  return 0;
  }
+ #endif

@@ -1,3 +1,5 @@
+#ifndef KEYAES_INCLUDE
+#define KEYAES_INCLUDE
 //  CSNBKGN2
 // on input it points to a skeleton
 // on exit it poitns to the token
@@ -51,3 +53,4 @@ int GENAES2( char * pData, int *  lData)
   *lData = l725;
   return rc;
 }
+#endif

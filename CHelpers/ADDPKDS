@@ -1,5 +1,5 @@
-#ifndef ADD2_INCLUDE
-#define ADD2_INCLUDE
+#ifndef ADDPKDS_INCLUDE
+#define ADDPKDS_INCLUDE
 #include <delPKDS.h>
 #include <do64.h>  // colin special
 /* --------------------------------------------------------------- */

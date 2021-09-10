@@ -1,3 +1,5 @@
+#ifndef DOREAD_INCLUDE
+#define DOREAD_INCLUDE
 int read(char * ddName, char ** pData,int * lData)
 {
   char * pBuffer;
@@ -20,3 +22,4 @@ int read(char * ddName, char ** pData,int * lData)
 //printHex(stdout,pBuffer,size);
   return 0;
 }
+#endif

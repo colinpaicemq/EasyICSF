@@ -1,3 +1,5 @@
+#ifndef export_INCLUDE
+#define export_INCLUDE
 /* --------------------------------------------------------------- */
 /* Export PKI public key                                           */
 /* --------------------------------------------------------------- */
@@ -32,3 +34,4 @@ int exportpki(char * pKey, char ** pExt, int * lExt)
   * lExt = lData;
   return rc;
 }
+#endif

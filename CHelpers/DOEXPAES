@@ -1,3 +1,5 @@
+#ifndef DOEXPAESINCLUDE
+#define DOEXPAESINCLUDE
 #include <do64.h>  // colin special
 /* --------------------------------------------------------------- */
 /* Export public key                                               */
@@ -70,3 +72,4 @@ int doExportAES (char * pKey, char * pPublic1, char * pType,
   * lData = lOut;
   return 0;
  }
+ #endif

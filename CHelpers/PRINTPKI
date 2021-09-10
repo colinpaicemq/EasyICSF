@@ -1,3 +1,5 @@
+#ifndef PRINTPKI_INCLUDE
+#define PRINTPKI_INCLUDE
 // apg pages 1376 table 588  etc
 #include <stdio.h>
 #include <stdlib.h>
@@ -127,3 +129,4 @@ int printPKI( char * p,int lIn,FILE * f)
     q += iL; // past the block
   }
 }
+#endif

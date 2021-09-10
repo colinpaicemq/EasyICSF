@@ -1,4 +1,6 @@
 
+#ifndef KEYPKI_INCLUDE
+#define KEYPKI_INCLUDE
 int GENPKIGEN(
   char **  pData,
   int  * lData)
@@ -52,3 +54,4 @@ int GENPKIGEN(
   * lData = lOutput;
   return rc;
 }
+#endif

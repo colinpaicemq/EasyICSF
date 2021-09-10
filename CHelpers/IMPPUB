@@ -1,3 +1,5 @@
+#ifndef IMPPUB_INCLUDE
+#define IMPPUB_INCLUDE
 int importPub(char * pPrivate,
   char ** pExt  , int *   lExt)
 {
@@ -45,3 +47,4 @@ int importPub(char * pPrivate,
  * lExt = lTarget;
  return rc;
 }
+#endif

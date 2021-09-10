@@ -1,4 +1,6 @@
 
+#ifndef SKELPKI_INCLUDE
+#define SKELPKI_INCLUDE
 int GENPKISKEL(
   char * pPrivate,
   char **  pData,
@@ -74,3 +76,4 @@ int GENPKISKEL(
 //* pData
   return rc;
 }
+#endif
