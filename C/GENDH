@@ -1,0 +1,74 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <string.h>
+typedef char    char8[8];
+#include <csfgetrc.h>  // colin special
+#include <printhx.h>  // colin special
+#include <do64.h>  // colin special
+#include <args2.h>  // colin special
+#include <addckds.h>  // colin special
+#include <SKELAES.h> // colin special
+#include <exists.h>  // colin special
+#include </usr/include/csfbext.h>
+#include <keydh  .h>  // colin special
+int main( int argc, char *argv??(??))
+{
+  int i;
+  char * pKey   = "";
+  char * pReplace = "";
+  char * pPrivate= "";
+  char * pPublic = "";
+  int lLocal ;
+  int    lExt;
+  char * pExt;
+  int rc = 0;
+  rc += readArgs( argc,argv,"-key",0 ,&pKey,"v");
+  rc += readArgs( argc,argv,"-replace",0 ,&pReplace,"v");
+  rc += readArgs( argc,argv,"-public",0 ,&pPublic,"v");
+  rc += readArgs( argc,argv,"-private",0 ,&pPrivate,"v");
+  if (rc > 0 )
+  {
+     printf("Problem with parameters %i\n",rc);
+     return 8;
+  }
+  if ( pKey[0] == ' ') {rc++;printf("-key ...  is required\n");}
+  if ( pPublic[0] == ' ') {rc++;printf("-public ...  is required\n");}
+  if ( pPrivate[0] == ' ') {rc++;printf("-private ...  is required\n");}
+  if ( rc > 0) return rc;
+
+  if (rc != 0) return rc;
+  if ( strlen(pReplace) > 0  &&
+       ( pReplace[0]=='y'  ||  pReplace[0]=='Y')
+     ) pReplace = "Y";
+  else pReplace = "N";
+  // build skeleton
+  char * pData;
+  int lData;
+  rc = doExists("P",pPrivate);
+  if (rc != 0)
+  {
+    printf("private key not found %s\n",pPrivate);
+    return rc;
+    }
+  rc =  doExists("P",pPublic );
+  if (rc != 0)
+  {
+    printf("public  key not found %s\n",pPublic );
+    return rc;
+  }
+  //
+  //       Now the ICSF processing
+  //
+  rc =  skeletonAES(&pData, &lData);
+  if (rc != 0) return rc;
+
+  rc= GENDH(pPrivate, pPublic,& pData,& lData);
+  if (rc != 0) return rc;
+  // create record in ckds
+  rc = addCKDS(pKey,pData,lData,pReplace);
+  if (rc != 0) return rc;
+  else
+  printf("Added %s successfully\n",pKey);
+   return rc;
+}

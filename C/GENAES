@@ -1,0 +1,57 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <string.h>
+typedef char    char8[8];
+#include <csfgetrc.h>  // colin special
+#include <exists.h>  // colin special
+#include <printhx.h>  // colin special
+#include <addckds.h>  // colin special
+#include <args2.h>  // colin special
+#include <do64.h>  // colin special
+//#include <delete2.h>// colin special
+#include <printAES.h>  // colin special
+#include <skelaes.h>  // colin special
+#include <keyaes.h>  // colin special
+#include </usr/include/csfbext.h>
+int keyGenerate2(char *,   int *);
+int skeletonAES(char **, int *);
+int main( int argc, char *argv??(??))
+{
+  printf("Compiled %s %s.\n", __DATE__, __TIME__);
+
+  int exists;
+  int i;
+  char * pKey   = "";
+  char * pReplace = "";
+  int rc = 0;
+  rc += readArgs( argc,argv,"-key",0,&pKey,"v");
+  rc += readArgs( argc,argv,"-replace",0,&pReplace,"v");
+  if (rc > 0 )
+  {
+     printf("Problem with parameters %i\n",rc);
+     return 8;
+  }
+  if ( pKey[0] == ' ') {rc++;printf("-key ...  is required\n");}
+  if ( rc > 0) return rc;
+  if ( strlen(pReplace) > 0  &&
+       ( pReplace[0]=='y'  ||  pReplace[0]=='Y')
+     ) pReplace = "Y";
+  else pReplace = "N";
+
+   char * pToken;
+   int  lToken;
+
+   // build the skeleton
+   rc = skeletonAES(& pToken,& lToken);
+   if ( rc != 0 ) return rc;
+   // input the skeleton
+   // output the oken
+   rc = GENAES2(pToken,&lToken);
+    if ( rc != 0 ) return rc;
+
+    rc = addCKDS(pKey,pToken       ,lToken,pReplace);
+    if ( rc != 0 ) return rc;
+    printf("GENAES %s successful\n",pKey);
+    return rc;
+}

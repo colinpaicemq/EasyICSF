@@ -1,0 +1,258 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <exists.h>
+#include <printhx.h>
+#include <csfgetrc.h>  // colin special
+#include <printaes.h>  // colin special
+#include <printpki.h>  // colin special
+#include </usr/include/csfbext.h>
+void listData(char which[8], char state[8],FILE *);
+int  metaData(char type[8],char * label, FILE *);
+int printData(char *, char *, FILE *);
+typedef char    char8[8];
+
+int main(int argc, char * argv[]) {
+FILE * fCKDSA    =fopen("dd:CKDSA"    ,"w"          );
+FILE * fCKDSI    =fopen("dd:CKDSI"    ,"w"          );
+FILE * fCKDSARCH =fopen("dd:CKDSARCH" ,"w"          );
+FILE * fPKDSA    =fopen("dd:PKDSA"    ,"w"          );
+FILE * fPKDSI    =fopen("dd:PKDSI"    ,"w"          );
+FILE * fKKDSARCH =fopen("dd:PKDSARCH" ,"w"          );
+  listData("CKDS    ","ACTIVE  ",  fCKDSA     );
+  listData("CKDS    ","INACTIVE",  fCKDSI   );
+  listData("CKDS    ","ARCHIVED",  fCKDSARCH);
+  listData("PKDS    ","ACTIVE  ",  fPKDSA   );
+  listData("PKDS    ","INACTIVE",  fPKDSI   );
+  listData("PKDS    ","ARCHIVED",  fKKDSARCH);
+}
+void listData(char which[8], char state[8],FILE * pF)
+{
+  int rc;
+  int rs;
+  #define RULECOUNT 3
+  int     ruleCount= RULECOUNT;
+  char8 rule[RULECOUNT] ;
+  memcpy(rule[0],which,8);
+  memcpy(rule[1],"DETAILED",8);
+  memcpy(rule[2],state,8);
+  int label_count;
+  int output_list_length = 4096;
+      output_list_length = 112 ;
+  char output_list[output_list_length];
+  char continuation[100];
+  memset(&continuation,0,sizeof(continuation));
+  int myrc;
+  int zero = 0;
+  while(1)
+  {
+  CSFKDSL (
+         &rc  ,                   /* return code                   */
+         &rs  ,                   /* reason code                   */
+         &zero,                   /* exit data length              */
+         0              ,         /* exit data[]                   */
+         &ruleCount,              /* rule array count              */
+         (unsigned char* )  &rule,/* rule array[]                  */
+         &zero,                   /* label filter length           */
+         0              ,         /* label filter[]                */
+         &zero,                   /* search criteria length        */
+         0              ,         /* search criteria[]             */
+         &label_count   ,         /* label count                   */
+         &output_list_length,     /* output list length            */
+         output_list,             /* output list[]                 */
+         &zero ,                  /* reserved1 length              */
+         0     ,                  /* reserved1[]                   */
+         &zero ,                  /* reserved2 length              */
+         0              ,         /* reserved2[]                   */
+         &continuation[0] );      /* continuation area[]           */
+      char * p;
+      p =  &output_list[0];
+      int s = output_list_length/112 ;
+      int i;
+      for (i = 0; i< s;i++){
+         fprintf(pF,"%4.4s %8.8s %.64s %.8s %.8s %.8s %.8s %.8s %.8s\n",
+                 which,state,p,p+64,p+72,p+80,p+88,p+96,p+104);
+         metaData(which, p,pF);
+         printData(which,p,pF);
+         p+= 112 ;
+      }
+      if ( rc == 4 && rs == 3303) continue;
+      break;
+}
+return     ;
+}
+//
+// metaData
+//
+ typedef
+  struct {
+      short len;  // length
+      short v; // value
+      short m; // meta data
+      char * label; // label
+  } md;
+//
+// metaDataDetail
+//
+int  metaDataDetail(char type[8],
+                   char * label,
+                   md   * metaData,  // which type to get
+                   char * output,
+                   int * lOutput,
+                   FILE * pF)
+{
+  int rc;
+  int rs;
+  int zero = 0;
+  int ruleCount = 1;
+  int lMetaData =  metaData -> len;
+  char8 rule;
+  memcpy(rule,type,8);
+  CSFKDMR (
+           &rc,                     /* return code                   */
+           &rs,                     /* reason code                   */
+           &zero,                   /* exit data length              */
+           0,                       /* exit data[]                   */
+           &ruleCount,              /* rule array count              */
+  (char *) &rule,                   /* rule array[]                  */
+           label,                   /* record label[]                */
+           &lMetaData,              /* metadata list length          */
+  (char *) metaData,                /* metadata list[]               */
+           lOutput,                 /* output list length            */
+            output,                 /* output list[]                 */
+           &zero,                   /* reserved1 length              */
+           0              ,         /* reserved1[]                   */
+           &zero,                   /* reserved2 length              */
+           0              );        /* reserved2[]                   */
+    if (rc != 0)
+      fprintf(pF,"CSFKDMR rc %i rs %i \n",rc,rs );
+    if (rc == 4 &&  rs == 3302)
+      fprintf(pF,"Database %8.8s is not in kdsr format rs 3302\n",type);
+    return rc;
+}
+///
+//
+///
+int  metaData(char type[8],char * label,FILE * pF)
+{
+  char output[1000];
+  memset(&output,0,sizeof(output));
+  int lOutput = sizeof(output);
+  typedef struct  {
+    short len;
+    short type;
+    char  data[16];
+  } sOutput;
+  typedef struct  {
+    short len;
+    short type;
+    short tag;
+    short mdl;
+    char  data[16];
+  } mdOutput;
+  typedef struct  {
+    short len;
+    short type;
+    short flag;
+  } fOutput;
+  int rc;
+  md  create = {4,2,0,"Create"};
+  md mdlist[] = {{6, 1,1,"Installation date"},
+                 {6, 1,2,"Service for reference"},
+                 {6, 1,3,"Archive date"},
+                 {6, 1,4,"Recall date"},
+                 {6, 1,5,"Fingerprint"},
+                 {6, 1,6,"Retained key info"},
+                 {4, 2,0,"Record create date"},
+                 {4, 3,0,"Record update date"},
+                 {4, 4,0,"Key validity start date"},
+                 {4, 5,0,"Key validity end date"},
+                 {4, 6,0,"Last reference date"},
+                 {4, 7,0,"Last reference date stck"},
+                 {4, 8,0,"Archive date"},
+                 {4, 9,0,"Record Archive"},
+                 {4,10,0,"Prohibit Archive"},
+                 {4,11,0,"Recall date"}
+                };
+  int loop = sizeof(mdlist)/sizeof(mdlist[0]);
+  int i;
+  for (i = 0;i<loop;i++)
+  {
+    lOutput = sizeof(output); // reset this back
+    rc=  metaDataDetail(type,
+                        label,
+                        &mdlist[i],
+                        &output[0],
+                        &lOutput,
+                        pF);
+    if (rc != 0 ) return rc;
+    sOutput * p;
+    mdOutput * m;
+    fOutput  * f;
+    char * flag;
+    p = ( sOutput *)&output[0];
+    m = ( mdOutput *)&output[0];
+    f = (  fOutput *)&output[0];
+    char * d;
+ int cc = p-> type;
+    switch(p-> type)
+    {
+    case 1:
+      d = &m->data[0];
+      int l = m-> mdl;
+ //   printf("Md len %i tag %hd\n",l,m-> tag);
+ //   if ( p->data[0] != 0)
+      if ( l > 0)
+      fprintf(pF,"              "
+             "%-30s %*.*s\n",
+          mdlist[i].label,l,l,d);
+      break;
+    case 2:
+    case 3:
+      d = &p->data[0];
+      if ( p->data[0] != 0)
+      fprintf(pF,"              "
+             "%-30s %.4s/%.2s/%.2s %.2s:%.2s:%.2s.%.2s\n",
+          mdlist[i].label,d,d+4,d+6,d+8,d+11,d+13,d+15);
+      break;
+    case 4:
+    case 5:
+    case 6:
+    case 8:
+    case 11:
+      if ( p->data[0] != 0)
+      fprintf(pF,"              "
+             "%-30s %.4s/%.2s/%.2s\n",
+          mdlist[i].label,d,d+4,d+6);
+      break;
+      //  now the flags
+    case  9:
+    case 10:
+      if (f->flag == 00) flag = "disabled";
+      else flag = "enabled";
+      fprintf(pF,"              "
+             "%-30s %s\n",
+          mdlist[i].label,flag);
+      break;
+    }
+ }
+ return 0;
+ }
+int printData(char * pWhich, char * pKey,FILE * pF)
+{
+   int rc;
+   char * pData;
+   int lData;
+   rc =readKS(pWhich ,pKey,&pData  , &lData);
+   if (rc != 0) return rc;
+   if (*pData+4  ==  0x05)
+      printAES(pData,lData,pF);
+   else if (*pData+0  ==  0x1f)
+      printPKI(pData,lData,pF);
+   else
+   {
+    fprintf(pF,"Unrecognised record type\n");
+   printHex(pF    ,pData,lData  );
+   }
+   return 0;
+}

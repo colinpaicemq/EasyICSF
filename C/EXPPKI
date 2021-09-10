@@ -1,0 +1,41 @@
+  /*Include standard libraries */
+#define _OPEN_SYS
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <string.h>
+#include <printhx.h>  // colin special
+#include <CSFGETRC.h>  // colin special
+#include <args2.h>  // colin special
+#include <export.h>  // colin special
+#include <writekey.h>  // colin special
+#include </usr/include/csfbext.h>
+typedef char    char8[8];
+int main( int argc, char *argv??(??))
+{
+  char * pKey   = "";
+//char * pPublic = "";
+  char * dd     = "";
+  int lLocal ;
+  int    lExt;
+  char * pExt;
+  int rc = 0;
+  rc += readArgs( argc,argv,"-key",64,&pKey,"v");
+//rc += readArgs( argc,argv,"-public",64,&pPublic,"v");
+  rc += readArgs( argc,argv,"-dd"    ,64,&dd     ,"v");
+  if (rc > 0 )
+  {
+     printf("Problem with parameters %i\n",rc);
+     return 8;
+  }
+  if ( pKey[0] == ' ') {rc++;printf("-key ...  is required\n");}
+//if ( pPublic[0] == ' ') {rc++;printf("-public ... is required\n");}
+  if ( dd[0] == ' ')    {rc++;printf("-dd  ... is required\n");}
+  if ( rc > 0) return rc;
+
+  rc = exportpki(pKey, &pExt, &lExt);
+  if ( rc > 0) return rc;
+  rc= writeKey(dd,pExt,lExt);
+  if ( rc > 0) return rc;
+}

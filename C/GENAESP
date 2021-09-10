@@ -1,0 +1,92 @@
+// generate a symmmetric key using public certificate
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <string.h>
+typedef char    char8[8];
+#include <printhx.h>  // colin special
+#include <csfgetrc.h>  // colin special
+#include <exists.h>  // colin special
+#include <printAES.h>  // colin special
+#include <writekey.h>  // colin special
+#include <do64.h>  // colin special
+#include <args2.h>  // colin special
+#include <imppub.h >  // colin special
+
+#include <delete2.h>  // colin special
+#include <add2.h>  // colin special
+// #include <impaesh.h> // colin special
+#include <keyGENP.h> // colin special
+#include </usr/include/csfbext.h>
+int main( int argc, char *argv??(??))
+{
+  printf("Compiled %s %s.\n", __DATE__, __TIME__);
+  int exists;
+  char * pCert;
+  int  lCert;
+
+  int i;
+  char * pKey   = "";
+  char * pKey2  = "";  //
+  char * pReplace= "";
+  char * pPublic = "";
+  char * pPrivate= "";
+  char * pubkey = "";
+  char * dd     = "";
+  char * pLocal ;
+  int lLocal ;
+  int    lExt;
+  char * pExt;
+  int rc = 0;
+  rc += readArgs( argc,argv,"-key",0,&pKey,"v");
+  rc += readArgs( argc,argv,"-key2",0,&pKey2,"v");
+  rc += readArgs( argc,argv,"-public",0,&pPublic,"v");
+  rc += readArgs( argc,argv,"-private",0,&pPrivate,"v");
+  rc += readArgs( argc,argv,"-replace",0,&pReplace,"v");
+  rc += readArgs( argc,argv,"-dd"    ,0,&dd    ,"v");
+  if (rc > 0 )
+  {
+     printf("Problem with parameters %i\n",rc);
+     return 8;
+  }
+  if ( strlen(pReplace) > 0  &&
+       ( pReplace[0]=='y'  ||  pReplace[0]=='Y')
+     ) pReplace = "Y";
+  else pReplace = "N";
+
+  if ( pKey[0] == ' ') {rc++;printf("-key ...  is required\n");}
+  if ( pKey2[0] == ' ') {rc++;printf("-key2 ...  is required\n");}
+  if ( pPublic[0] == ' ') {rc++;printf("-public ... is required\n");}
+  if ( pPrivate[0]== ' ') {rc++;printf("-private ... is required\n");}
+  if ( rc > 0) return rc;
+
+//exists = checkExistsDelete("C",pKey,delete  );
+//if (exists != ) return exists;
+
+  // this returns a local key and an encrypted key
+  rc = keyGENP(pPublic,& pLocal, &lLocal,
+                                &pExt,   &lExt);
+  printf("keygen rc %i lLocal %i lExt %\n",rc,lLocal,lExt);
+  if ( rc != 0 ) return rc;
+  // and add it
+  rc = addCKDS(pKey    ,pLocal,lLocal,pReplace);
+  if ( rc != 0 ) return rc;
+
+#ifdef no
+  // write the external key to a dataset
+  rc = writeKey(dd,pExt,lExt);
+  if ( rc != 0 ) return rc;
+  // pass in the RSA encrypted, and get back the local encrypted
+  printHex(stdout,pExt,lExt);
+
+  rc= importPub(pPrivate,&pExt,&lExt);
+  if ( rc != 0 ) return rc;
+
+
+  printf("import pub lengh %i\n",lExt);
+  rc = addCKDS(pKey2   , pExt,lExt,pReplace);
+  printf("addCKDS imported %i %64.64s\n",rc,pKey2);
+  #endif
+  return rc;
+}
+

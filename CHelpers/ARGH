@@ -1,0 +1,35 @@
+  char * pKey   = "";
+  char * pKey2  = "";  //
+  char * pDdelete = "";
+  char * pPublic = "";
+  char * pPrivate= "";
+  char * pubkey = "";
+  char * dd     = "";
+  char * pLocal ;
+  int lLocal ;
+  int    lExt;
+  char * pExt;
+  int rc = 0;
+  rc += readArgs( argc,argv,"-key",64,&pKey,"v");
+  printf("-key %i\n",rc);
+  rc += readArgs( argc,argv,"-key2",64,&pKey2,"v");
+  printf("-key2 %i\n",rc);
+  rc += readArgs( argc,argv,"-delete",64,&pDelete,"n");
+  printf("-delete %i\n",rc);
+  rc += readArgs( argc,argv,"-public",64,&pPublic,"v");
+  printf("-public %i\n",rc);
+  rc += readArgs( argc,argv,"-private",64,&pPrivate,"v");
+  printf("-private %i\n",rc);
+  rc += readArgs( argc,argv,"-dd"    ,64,&dd    ,"v");
+  printf("-dd     %i\n",rc);
+  if (rc > 0 )
+  {
+     printf("Problem with parameters %i\n",rc);
+     return 8;
+  }
+  if ( pKey[0] == ' ') {rc++;printf("-key ...  is required\n");}
+  if ( pKey2[0] == ' ') {rc++;printf("-key2 ...  is required\n");}
+  if ( pPublic[0] == ' ') {rc++;printf("-public ... is required\n");}
+  if ( pPrivate[0]== ' ') {rc++;printf("-private ... is required\n");}
+  if ( rc > 0) return rc;
+

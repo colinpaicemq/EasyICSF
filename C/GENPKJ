@@ -1,0 +1,98 @@
+//
+// Use the command insteaad
+//
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <string.h>
+typedef char    char8[8];
+#include <csfgetrc.h>  // colin special
+#include <printhx.h>  // colin special
+#include <do64.h>  // colin special
+#include <skelp.hh>  // colin special
+#include </usr/include/csfbext.h>
+#include <delete2.h>  // colin special
+int main( int argc, char *argv??(??))
+{
+  int i;
+  char * pKey   = "";
+  char * pDelete = "";
+  int lLocal ;
+  int    lExt;
+  char * pExt;
+  int rc = 0;
+  rc += readArgs( argc,argv,"-key",64,&pKey,"v");
+  rc += readArgs( argc,argv,"-delete",64,&pDelete,"n");
+  if (rc > 0 )
+  {
+     printf("Problem with parameters %i\n",rc);
+     return 8;
+  }
+  if ( pKey[0] == ' ') {rc++;printf("-key ...  is required\n");}
+  if ( rc > 0) return rc;
+
+  if (rc != 0) return rc;
+ // build skeleton
+  rc=doBuildSkeletonKP(&anch);
+  if (rc != 0) return rc;
+
+  // create record in pkds
+  rc = addPKDS(pKey,pData,lData,pDelete);
+  if (rc != 0) return rc;
+  return rc;
+}
+#ifdef del
+int doCSNDPKG (anch  * pAnch)
+{
+  int rc;
+  int rs;
+  int zero = 0;
+  int rule_count                 =  1;
+  char8 rule_array[1]            ;
+  memcpy(rule_array[0],"MASTER  ",8);
+  char transport_key[64];
+  int lTransport_key = sizeof(transport_key);
+  memset(transport_key,0,lTransport_key);
+  // code to get round c problems
+  char private[64 ];
+  int lPrivate = sizeof(private);
+  memcpy(private,pAnch -> label,64);
+  rc= CSNDPKG (
+             &rc,                /* return code                   */
+             &rs,                /* reason code                   */
+             &zero,              /* exit data length              */
+             0,                  /* exit data[]                   */
+             &rule_count,        /* rule array count              */
+  (char *)   &rule_array[0],     /* rule array[]                  */
+             &zero,              /* regen data length             */
+             0,                  /* regen data[]                  */
+             &pAnch->lToken,     /* source key token length       */
+  (char *)   &pAnch->token,      /* source key token[]            */
+             &transport_key[0],  /* transport key id[64]          */
+             &lPrivate ,         /* outputt key token length   */
+  (char *)   &private[0]    );   /* output key token[]            */
+  printf("CSNDPKG rc %i rs %i\n",rc,rs);
+  if ( rc != 0)
+     return rc;
+#ifdef no
+  char pub[2000];
+  int lPub = sizeof(pub);
+  CSNDPKX(
+             &rc,                /* return code                   */
+             &rs,                /* reason code                   */
+             &zero,              /* exit data length              */
+             0,                  /* exit data[]                   */
+             &zero,              /* rule array count              */
+ //char *)   &rule_array[0],     /* rule array[]                  */
+             0,                  /* rule array[]                  */
+             &lPrivate,
+             &private[0],
+             &lPub,
+             &pub[0]);
+  printf("CSNDPKX rc %i rs %i\n",rc,rs);
+  if ( rc != 0)
+     return rc;
+  printHex(stdout,&pub[0],lPub);
+#endif
+#endif
+}

@@ -1,0 +1,16 @@
+#include <doimpdat.h>
+#include <doimpcip.h>
+int doImportAES (char * pKey, char * pPrivate, char * pType,
+    char ** pData, int * lData)
+{
+  if (*pType == 'D') // a data type key
+  return doImpDat(pKey,pPrivate,pType,pData,lData);
+  else
+  if (*pType == 'C') // a data type key
+  return doImpCip(pKey,pPrivate,pType,pData,lData);
+  else
+  {
+     printf("Invalid type:needs to be Data or Cipher\n");
+     return 8;
+  }
+}

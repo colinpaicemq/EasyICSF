@@ -1,0 +1,58 @@
+  /*Include standard libraries */
+#define _OPEN_SYS
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <string.h>
+typedef char    char8[8];
+#include <printhx.h>  // colin special
+#include <csfgetrc.h>  // colin special
+#include <exists.h>  // colin special
+//nclude <zo64.h>  // colin special
+#include <args2.h>  // colin special
+#include <writekey.h>  // colin special
+#include <DOEXPAES.h>  // colin special
+#include </usr/include/csfbext.h>
+int main( int argc, char *argv??(??))
+{
+
+  char * pKey   = "";
+  char * pPublic = "";
+  char * dd     = "";
+  char * pType  = ""; // DATA or CIPHER
+  int    lExt;
+  char * pExt;
+  int rc = 0;
+  rc += readArgs( argc,argv,"-key",64,&pKey,"v");
+  rc += readArgs( argc,argv,"-public",64,&pPublic,"v");
+  rc += readArgs( argc,argv,"-dd"    ,64,&dd    ,"v");
+  rc += readArgs( argc,argv,"-type"  ,64,&pType ,"v");
+  if (rc > 0 )
+  {
+     printf("Problem with parameters %i\n",rc);
+     return 8;
+  }
+  if ( pKey[0] == ' ') {rc++;printf("-key ...  is required\n");}
+  if ( pPublic[0] == ' ') {rc++;printf("-public ... is required\n");}
+  if ( dd[0] == ' ') {rc++;printf("-dd ... is required\n");}
+  if ( rc > 0) return rc;
+
+  int i;
+  rc = doExists("P",pPublic);
+  if ( rc > 0 )
+  {
+     printf("Public key PKDS key does not exist %s\n",pPublic);
+     return 8;
+  }
+  int   lData;
+  char * pData;
+  rc =doExportAES (pKey,pPublic,pType,&pData, &lData);
+  printHex(stdout,pData,128);
+  if (rc > 0 ) return rc;
+  rc = writeKey(dd,pData,lData);
+  if (rc > 0 ) return rc;
+  printf("export of %s successful\n",pKey);
+ return rc;
+}
+

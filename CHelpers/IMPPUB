@@ -1,0 +1,47 @@
+int importPub(char * pPrivate,
+  char ** pExt  , int *   lExt)
+{
+//  CSNDSYI
+  int rc;
+  int rs;
+  int zero = 0;
+  int rule_count                 =  2;
+  int i64 = 64;
+  // key type AES and used for OP (on this system
+  char8 rule[3]  = {"AES     ",
+                    "PKCS-1.2",
+  //                "PKCSOAEP",
+                    "OP      "};
+  char * pRule = &rule[0][0];
+  char * target;
+  int lTarget = 64;
+  target = (char *) malloc(lTarget);
+  printf("CSNDSYI  key %s\n",pPrivate);
+  int llExt = *lExt;
+  printf("CSNDSYI  lIn %i \n",llExt   );
+  CSNDSYI (
+            &rc  ,               /* return code         */
+            &rs  ,               /* reason code         */
+            &zero,               /* exit data length   0*/
+            0,                   /* exit data[]        0*/
+            &rule_count,        /* rule array count    ! */
+            pRule,              /* rule array[]        ! */
+
+           &llExt,               /* enciphered token len,  */
+          * pExt,                /* enciphered token       */
+
+            &i64,                /* RSA pub key id length   */
+            pPrivate,            /* RSA pub key id[]        */
+            &lTarget,           /* cca DES token length          */
+            target            );  /* cca DES token[64]             */
+//if ( rc > 0)
+  {
+     printf("CSNDSYI rc %i rs %i %s\n",rc,rs,csfgetrc(rs));
+  }
+  if ( rc > 0)
+ return rc;
+ // move the data back...
+ * pExt = target;
+ * lExt = lTarget;
+ return rc;
+}

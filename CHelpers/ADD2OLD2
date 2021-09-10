@@ -1,0 +1,156 @@
+#ifndef ADD2_INCLUDE
+#define ADD2_INCLUDE
+/* --------------------------------------------------------------- */
+/* Add a record to the keystore - if it exist already replace it   */
+/* --------------------------------------------------------------- */
+#define RECORD_EXISTS 16036
+
+
+int addPKDS(char * key, char * pData, int lData, char * pDelete)
+{
+  int rc;
+  int i;
+  for( i = 0; i<2; i++ )  // go round twice once with delete
+  {
+     rc = addPKDS1(key, pData,lData,pDelete);
+     if (rc == 0) break;
+     rc = deletePKDS(key);
+     if (rc == 0) break;
+  }
+  return rc;
+}
+int doAdd2( char * which,  char * key, char * pData, int lData,
+char * pDelete)
+{
+  int rc;
+  int rs;
+  rc = doAdd1(which,key,pData,lData,&rs);
+  if ( rc == RECORD_EXISTS)
+  {
+    rc = doDelete2(which,key);
+    if (rc == 0)
+     rc = doAdd1(which,key,pData,lData,&rs);
+  }
+  return rc;
+}
+int doAdd1( char * which,  char * key, char * pData, int lData,
+int * rs2)
+{
+  int rc;
+  int rs;
+  int zero = 0;
+//printf("do add size %i %s\n",lData,key);
+  do64(Key,key);
+  if (which[0] == 'C')
+  {
+    rc= CSNBKRC2(
+               &rc  ,                   /* return code              */
+               &rs,                     /* reason code              */
+               &zero,                   /* exit data length         */
+               0,                       /* exit data[]              */
+               &zero,                   /* rule array count         */
+               0,                       /* rule array[]             */
+    (char *)  pKey,                     /* key key[64]               */
+              &lData,                   /* key token length   */
+              pData        );/* key token[]                   */
+  //if ( rc > 0)
+    {
+    printf("CSNBKRC2 add %s CKDS %i rs %i %s\n",key,
+           rc,rs,csfgetrc(rs));
+    }
+    if (rs == RECORD_EXISTS) return rs;
+
+    return rc;
+  }
+  else
+  if (which[0] ==  'P')
+  {
+  rc= CSNDKRC(
+             &rc  ,                   /* return code              */
+             &rs,                     /* reason code              */
+             &zero,                   /* exit data length         */
+             0,                       /* exit data[]              */
+             &zero,                   /* rule array count         */
+             0,                       /* rule array[]             */
+  (char *)  pKey,                     /* key key[64]               */
+             &lData,                  /* key token length   */
+  (char *)   pData); /* key token[]                   */
+//if ( rc > 0)
+  {
+  printf("CSNDKRC add %s PKDS %i rs %i %s\n",key,
+         rc,rs,csfgetrc(rs));
+  }
+  if (rs == RECORD_EXISTS) return rs;
+  else
+  return rc;
+  }
+  else
+    {
+      printf("Invalid type passed to Add %s\n",which );
+      return 8;
+    }
+}
+int addCKDS(char * key, char * pData, int lData, int * rs2)
+{
+  int rc;
+  int rs;
+  int zero = 0;
+  do64(Key,key);
+    rc= CSNBKRC2(
+               &rc  ,                   /* return code              */
+               &rs,                     /* reason code              */
+               &zero,                   /* exit data length         */
+               0,                       /* exit data[]              */
+               &zero,                   /* rule array count         */
+               0,                       /* rule array[]             */
+    (char *)  pKey,                     /* key key[64]               */
+              &lData,                   /* key token length   */
+              pData        );/* key token[]                   */
+  //if ( rc > 0)
+    {
+    printf("CSNBKRC2 add %s CKDS %i rs %i %s\n",key,
+           rc,rs,csfgetrc(rs));
+    }
+    if (rs == RECORD_EXISTS) return rs;
+
+    return rc;
+}
+//
+//
+//
+int addPKDS1(char * key, char * pData, int lData, int * rs2)
+{
+  int rc;
+  int rs;
+  int zero = 0;
+  do64(Key,key);
+  rc= CSNDKRC(
+             &rc  ,                   /* return code              */
+             &rs,                     /* reason code              */
+             &zero,                   /* exit data length         */
+             0,                       /* exit data[]              */
+             &zero,                   /* rule array count         */
+             0,                       /* rule array[]             */
+  (char *)  pKey,                     /* key key[64]               */
+             &lData,                  /* key token length   */
+  (char *)   pData); /* key token[]                   */
+  if ( rc > 0)
+  {
+  printf("CSNDKRC add %s PKDS %i rs %i %s\n",key,
+         rc,rs,csfgetrc(rs));
+  }
+  if (rs == RECORD_EXISTS) return rs;
+  else
+}
+//
+//
+//
+int addCKDS(char * key, char * pData, int lData,
+char * pDelete)
+{
+int rc;
+rc = doAdd2("C", key, pData,lData,pDelete);
+return rc;
+}
+
+#endif

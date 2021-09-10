@@ -1,0 +1,43 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <string.h>
+#include <csfgetrc>     // colin special
+#include <printhx.h>     // colin special
+#include <addPKDS.h>     // colin special
+#include <args2.h>    // colin special
+#include <read.h>  // colin special
+#include </usr/include/csfbext.h>
+typedef char    char8[8];
+int main( int argc, char *argv??(??))
+{
+  int rc;
+  int i;
+  char * pKey   = "";
+  char * pReplace = "";
+  rc += readArgs( argc,argv,"-key",0,&pKey,"v");
+  rc += readArgs( argc,argv,"-replace",0,&pReplace,"v");
+  if (rc > 0 )
+  {
+     printf("Problem with parameters %i\n",rc);
+     return 8;
+  }
+  if ( pKey[0] == ' ') {rc++;printf("-key ...  is required\n");}
+
+  if ( strlen(pReplace) > 0  &&
+       ( pReplace[0]=='y'  ||  pReplace[0]=='Y')
+     ) pReplace = "Y";
+  else pReplace = "N";
+  //
+  // -- Now do the processing --
+  //
+  char * pToken = 0;
+  int lToken;
+
+  rc=  read("dd:CERT",&pToken,&lToken);
+//printf("read %i data length %i\n",rc,lToken);
+//printHex(stdout,pToken,lToken);
+  if ( rc != 0) return 8;
+  rc = addPKDS(pKey, pToken,lToken,pReplace);
+  return 0;
+}
