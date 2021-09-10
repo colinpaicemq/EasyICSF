@@ -9,10 +9,6 @@ generated_key_token                = left(label,64)
 label = left(label,64)
 /* these parameters are function dependant   */
 rule_count                     = d2c(0,4)
-/*
-rule_array                     = 'MASTER  ' ||,
-                                 'KEY-AES ';
-*/
 rule_array                     = ''
 /* can be anything ...  */
 Token                              = COPIES('00'x,6500)
@@ -40,4 +36,5 @@ IF (RC <> 0 )          Then
     EXIT
   END
 
-RETURN myrc myrs c2x(Token)
+lData = c2d(lToken)
+RETURN myrc  c2x(substr(Token,1,lData))

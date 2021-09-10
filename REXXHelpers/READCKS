@@ -28,12 +28,13 @@ ADDRESS linkpgm "CSNBKRR2",
 
 myrc = c2d(myrc)
 myrs = C2d(myrs)
-say "rc  = "myrc myrs
+say me strip(label) myrc myrs
 IF (RC <> 0 )          Then
   DO
-    SAY 'CSNBKRR2 Failed (rc='myrc' rs='myrs')' cprs(myrc,myrs )
+    SAY me 'CSNBKRR2' strip(label) 'Failed (rc='myrc' rs='myrs')',
+       cprs(myrc,myrs )
     return myrc myrs
     EXIT
   END
-
-RETURN myrc myrs c2x(Token)
+lToken = c2d(lToken)
+RETURN myrc myrs c2x(substr(Token,1,lToken))

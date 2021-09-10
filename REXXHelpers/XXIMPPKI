@@ -1,0 +1,36 @@
+/* --------------------------------------------------------------- */
+/* delete from pkds                                                */
+/*                                                                 */
+/* --------------------------------------------------------------- */
+parse source . . me .
+parse arg label
+say "IMPPKI " label
+rc = 'FFFFFFFF'x
+rs = 'FFFFFFFF'x
+exit_length = '00000000'x
+exit_data = ''
+rule_count = '00000000'x
+rule_array = ''
+label =  LEFT(label ,64)
+lLabel = '00000040'x
+
+token = COPIES('00'x,6500)
+lToken   = d2c(6500,4)
+ADDRESS LINKPGM "CSNDPKX",
+   'myrc'                             'myrs'              ,
+   'exit_length'                      'exit_data'         ,
+   'rule_count'                       'rule_array'        ,
+   'lLabel'                           'label'             ,
+   'lToken'                           'Token'
+
+myrc = c2d(myrc)
+myrs = c2d(myrs)
+IF (myrc <> 0 ) THEN
+  DO
+    SAY me 'CSFDPKX (rc='myrc' rs='myrs')' cprs(myrc,myrs)
+    RETURN myrs myrs
+  END
+
+lData =  c2d(lTOKEN)
+RETURN myrc myrs c2x(substr(token,1,lData))
+

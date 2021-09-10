@@ -5,7 +5,6 @@
 /* table 609 page 1408 - QSAI pub */
 /*  1F0016E40000000050000FA000360000         */
 parse source . . me .
-trace e
 parse arg data
 data = x2c(data)
 p = 1 /* pointer to the base data */

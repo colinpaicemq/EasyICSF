@@ -4,7 +4,7 @@
 /* --------------------------------------------------------------- */
 parse source . . me .
 parse arg label,private,Data
-say "IMPAES" label private
+say me label private
 data  =  x2c(Data)
 lData =  d2c(length(data),4)
 rule_count = d2c(2,4)

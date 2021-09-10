@@ -1,6 +1,8 @@
 /* Rexx */
-/* export a PKI key */
+/* read a data from //IMPORT and add it to the PKDS  */
+/* import a PKI key */
 signal on novalue
+parse source . .  me .
 parse upper arg   . "-KEY" key .
 parse upper arg args
 if ( wordpos("-REPLACE",args) > 0) then replace="Y"
@@ -25,7 +27,7 @@ do
 end
 data =c2x(in.1)
 rc = addpkds(key ,Data,replace)
-parse var rc myrc myrs Key
-say "IPKI addpkds " myrc myrs  cprs(myrc,myrs)
+parse var rc myrc myrs .
+say me "addpkds " key myrc myrs  cprs(myrc,myrs)
 if myrc <> 0 then return myrc
 return 0

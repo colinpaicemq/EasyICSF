@@ -9,7 +9,6 @@
 /* Label passed in returns L'Token Token  */
 parse source . . me .
 parse arg label
-ZZle_count                     = d2c(2,4)
 rule_array                     = 'QSA-PAIR' ||,
                                  'U-DIGSIG'
 if length(rule_array)// 8 <> 0 then

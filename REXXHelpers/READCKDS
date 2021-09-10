@@ -9,11 +9,14 @@ generated_key_token                = left(label,64)
 label = left(label,64)
 /* these parameters are function dependant   */
 rule_count                     = '00000000'x;
+/*
 rule_array                     = 'MASTER  ' ||,
                                  'KEY-AES ';
+                                 */
+rule_array                     = ''
 /* can be anything ...  */
 Token                              = COPIES('00'x,6500)
-lToken                             = '00001964'x
+lToken                             = d2c(6500,4)
 
 myrc            = 'FFFFFFFF'x
 myrs            = 'FFFFFFFF'x

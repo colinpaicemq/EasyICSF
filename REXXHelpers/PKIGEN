@@ -5,7 +5,6 @@
 parse source . . me .
 parse arg label,Skel
 Skel  =  x2c(Skel)
-say me "length2" length(skel)
 lSkel =  d2c(length(Skel),4)
 label = left(LABEL,64)
 /* these parameters are function dependant   */
