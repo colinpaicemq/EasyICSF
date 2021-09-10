@@ -1,0 +1,59 @@
+#ifndef DOIMPCIP_INCLUDE
+#define DOIMPCIP_INCLUDE
+int importCipher(char * pKey, char * pPrivate, char * pUnused,
+    char ** pData, int * lData)
+{
+  //  CSNDSYI2
+  int rc;
+  int rs;
+  int zero = 0;
+  int i64 = 64;
+  // make these char 64
+  do64(Priv,pPrivate) ;
+  do64(myKey ,pKey    );
+  char * pRule;
+  char8 rule_Data[3] =
+                       {"AES     ",
+                        "PKOAEP2 ",
+                        "SHA-256 "};
+  int rule_count                 =  2;
+  //                   {"AES     ",
+  //                    "PKCS-1.2"};
+  pRule = &rule_Data[0][0];
+  int lOutput = 725 ;
+  char * pOutput = (char * ) malloc(lOutput);
+  if ( pOutput == 0)
+  {
+    printf("malloc for %i failed in IMPAES\n",lOutput);
+  }
+  printf("importCipher Key Name %s.\n",pKey);
+  printf("importCipher Private Key %s.\n",pPrivate);
+  int l0 = 0;
+  CSNDSYI2 (
+              &rc,                /* return code            */
+              &rs ,               /* reason code            */
+              &zero,              /* exit data length       */
+              0    ,              /* exit data[]            */
+              &rule_count,        /* rule array count       */
+              pRule,              /* rule array[]           */
+              lData     ,        /* length of input data   */
+            * pData, /* input data             */
+
+              &i64,               /* priv key length,  */
+              pPriv    ,           /*priv token[64]      */
+
+              &i64,               /* name to be stored           */
+              pmyKey,             /* key name[]             */
+
+              &lOutput    ,       /* Imported key length    */
+              pOutput        );   /* Imported key           */
+// if( rc > 0)
+   printf("CSNDSYI2 rc %i rs %i %s\n",rc,rs,csfgetrc(rs));
+ if (rc != 0) return rc;
+ // get rid of old input buffer
+   free (*pData);
+   *pData =  pOutput;
+   *lData = lOutput;
+ return 0;
+ }
+ #endif

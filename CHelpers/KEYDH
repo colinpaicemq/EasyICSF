@@ -1,0 +1,103 @@
+#ifndef KEYDH_INCLUDE
+#define KEYDH_INCLUDE
+int GENDH(
+// input
+  char * pPrivate,
+  char * pPublic,
+// output
+  char **  pData,
+  int  * lData)
+{
+//  printHex(stdout,*pData,64);
+  do64(public,pPublic);
+  do64(private,pPrivate);
+  printf("Public %s\n",pPublic);
+  printf("Privatec %s\n",pPrivate);
+  int rc;
+  int rs;
+  int zero = 0;
+  int rule_count                 =  2;
+  // key type AES and used for OP (on this system
+  char8 rule[2]  = {"DERIV01 "
+                   ,"KEY-AES "};
+  char * pRule = & rule[0][0];
+  int keyLength = 256 ;//  AES 256  - why use any other?
+
+//char *pkeyType1 = "TOKEN   ";
+//char *pkeyType2 = "        ";
+
+  int i64 = 64;
+  int l725 = 725;
+  int lParty = 14;
+  int l = * lData;
+//printf("CSNDEDH before length data %i\n",l);
+  l = 900;
+  char * pParty = "transaction-id";
+  // the token coming in can be short (eg 56 bytes)
+  // but it generates up to 900 bytes
+  // so we we have to allocate a new buffer,big enough
+  // and copy the old buffer into it
+  int lOutput = 900;
+  char * pOutput;
+  pOutput = (char *) malloc(lOutput);
+  if ( pOutput == 0)
+  {
+     printf("CSNDEDH malloc failed\n");
+     return 8;
+  }
+  memcpy(pOutput,*pData,*lData);
+
+  CSNDEDH(
+          &rc  ,                   /* return code         */
+          &rs  ,                   /* reason code         */
+          &zero,                   /* exit data length   0*/
+          0,                       /* exit data[]        0*/
+
+          &rule_count,             /* rule array count    ! */
+          pRule,                   /* rule array[]        ! */
+
+          &i64,                    /* Len private           */
+          pprivate,                /* private             ! */
+
+          &zero, // l Kek
+          0,                       // p KEK
+
+          &i64,                    /* Len public            */
+         ppublic      ,            /* public              ! */
+
+          &zero,                    /* chaining             0*/
+          0,                        /* chaining ignored     0*/
+          &lParty,               /* output key id2[]      !  */
+          pParty,                // transaction-id
+
+          &keyLength,
+
+          &zero,                    /* reserved1             */
+          0,                        /*                       */
+          &zero,                    /* reserved2             */
+          0,                        /*                       */
+          &zero,                    /* reserved3             */
+          0,                        /*                       */
+          &zero,                    /* reserved4             */
+          0,                        /*                       */
+          &zero,                    /* reserved5             */
+          0,                        /*                       */
+          &zero,                    /* L' output kek         */
+          0,                        /*    output kek         */
+          &lOutput,
+          pOutput
+  );           /* output key id2[]      !  */
+  if ( rc > 0)
+  {
+    printf("CSNDEDH  rc %i rs %i %s\n",rc,rs,csfgetrc(rs));
+    return rc;
+  }
+  free(*pData);
+  *pData = pOutput;
+  * lData = lOutput;
+//printf("CSNDEDH after length data %i\n",lOutput);
+// lData = l   ;
+//* pData
+  return rc;
+}
+#endif

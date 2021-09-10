@@ -1,0 +1,75 @@
+#ifndef DOEXPAESINCLUDE
+#define DOEXPAESINCLUDE
+#include <do64.h>  // colin special
+/* --------------------------------------------------------------- */
+/* Export public key                                               */
+/* --------------------------------------------------------------- */
+int doExportAES (char * pKey, char * pPublic1, char * pType,
+                 char ** pData, int * lData)
+{
+  int rc;
+  int rs;
+  int i64 = 64;
+  int zero = 0;
+  do64(Public,pPublic1);
+  int rule_count                 =  3;
+  printf("DOEXPAES type %s\n",pType);
+  char * pRule;
+  char8 rule_Cipher[3] =
+                       {"AES     ",
+                        "PKOAEP2 ",
+                        "SHA-256 "};
+  char8 rule_Data[3] =
+                       {"AES     ",
+  //                    "PKCS-1.2",
+                        "PKCSOAEP",
+//                      "SHA-1   "};
+                        "SHA-256 "};
+  if (*pType == 'D') // a data type key
+  {
+    pRule = &rule_Data[0][0];
+    rule_count                 =  3;
+   }
+
+  else
+  if (*pType == 'C') // a data type key
+    pRule = &rule_Cipher[0][0];
+  else
+  {
+     printf("Invalid type:needs to be Data or Cipher\n");
+     return 8;
+  }
+  int lOut = 900;
+  char * pOut;
+  pOut = (char * ) malloc(lOut);
+  if ( pOut == 0)
+  {
+     printf("doexpaes: malloc failed\n");
+     return 8 ;
+  }
+  printf("Source Key user   %64.64s.\n",pKey );
+  printf("Public key     %64.64s.\n",Public);
+  printf("RULE           %16.16s.\n",pRule );
+
+  CSNDSYX (
+             &rc,                /* return code            */
+             &rs ,               /* reason code            */
+             &zero,              /* exit data length       */
+             0    ,              /* exit data[]            */
+             &rule_count,        /* rule array count       */
+             pRule,              /* rule array[]           */
+             &i64   ,            /* source key    length,  */
+             pKey  ,             /* source key             */
+             &i64,               /* RSA public key length  */
+             &Public,            /* RSA public key token   */
+             &lOut,              /* exported key length    */
+             pOut           );   /* exported key           */
+  if( rc > 0)
+    printf("CSNDSYX  rc %i rs %i %s\n",rc,rs,csfgetrc(rs));
+  if (rc != 0) return rc;
+  printf("Length of data in %i out %i \n",i64,lOut);
+  *pData = pOut;
+  * lData = lOut;
+  return 0;
+ }
+ #endif
