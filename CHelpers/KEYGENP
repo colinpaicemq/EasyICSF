@@ -1,0 +1,62 @@
+#ifndef KEYGENP_INCLUDE
+#define KEYGENP_INCLUDE
+int keyGENP(char * pPublic, // name of the public key
+  char **ppLocal, int * lpLocal, // addr(addr local ), addr(len(local))
+  char **ppExt  , int * lpExt ) // ditto encrypted
+{
+  // CSNDSYG
+  int rc;
+  int rs;
+  int zero = 0;
+  int rule_count                 =  3;
+  // key type AES and used for OP (on this system
+  char8 rule[3]  = {"AES     ",
+                    "PKCS-1.2",
+  //                "PKCSOAEP",
+                    "OP      "};
+  char * pRule = &rule[0][0];
+  int i64 = 64;
+  int lLocal = 128;
+  char * pLocal;
+  pLocal = malloc(lLocal);
+//int lExt   = 128;
+  int lExt   = 512;
+  char * pExt;
+  do64(Publicx,pPublic);
+  pExt   = malloc(lExt );
+//char rsa[512] ;
+  CSNDSYG (
+          &rc  ,               /* return code         */
+          &rs  ,               /* reason code         */
+          &zero,               /* exit data length   0*/
+          0,                   /* exit data[]        0*/
+          &rule_count,         /* rule array count    ! */
+          pRule,               /* rule array[]        ! */
+
+          0, // ignored for AES/* key encrypt key id[]    */
+
+          &i64,  // label      /* RSA pub key id length   */
+          &Publicx, // Label     /* RSA pub key id[]        */
+
+          &lLocal,            /* loc enc key token leng  */
+          pLocal,              /* loc enc key token[]     */
+
+          &lExt,              /* RSA enc key length      */
+          pExt              ); /* RSA enciphered key[]    */
+
+//if ( rc > 0)
+  {
+     printf("CSNDSYG rc %i rs %i %s\n",rc,rs,csfgetrc(rs));
+  }
+  if ( rc > 0)
+       return rc;
+  printf("CSNDSYG length local %i, length external %i\n",lLocal,lExt);
+  *lpLocal = lLocal;
+  *ppLocal = pLocal;
+  *lpExt   = lExt  ;
+  *ppExt   = pExt  ;
+//if (rc != 0) return rc;
+   //======================================
+return rc;
+}
+#endif

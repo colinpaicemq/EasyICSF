@@ -1,0 +1,25 @@
+#ifndef DOREAD_INCLUDE
+#define DOREAD_INCLUDE
+int read(char * ddName, char ** pData,int * lData)
+{
+  char * pBuffer;
+  int lBuffer = 32000;
+  pBuffer = (char *) malloc (lBuffer);
+  FILE * fCert = fopen(ddName     ,"rb,type=record");
+  if (fCert == NULL)
+  {
+     perror("error opening file");
+     return 8;
+  }
+  int size     ;
+  size= fread(pBuffer,1,lBuffer,fCert);
+  printf("read size %i buffer %i\n",size,lBuffer);
+  fclose(fCert);
+  if (size == 0)
+     return 8;
+  * lData = size;
+  * pData = pBuffer;
+//printHex(stdout,pBuffer,size);
+  return 0;
+}
+#endif
