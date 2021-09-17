@@ -69,7 +69,7 @@ It writes the data to the data set //CERT ....
 The exportAES routine has logic to detect if the KEK is a PKI key, or an AES Exporter key,
 and chooses the appropriate options.
 
-See [C](C.md) for examples in C.
+See [C examples](C.md). 
 
 There are helper routines for example
 
