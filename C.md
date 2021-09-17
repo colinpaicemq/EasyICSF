@@ -115,6 +115,8 @@ CC contains JCL to compile all the programs.   The other programs have JCL to co
 
 The functions have code which takes the name of a null terminated string and converts it to a 64 character string.
 
+There is a list of my interpretation of ICSF reason codes [here](https://colinpaice.blog/2021/08/26/icsf-return-codes-not-for-humans).
+
 ### addCKDS(pKey,pToken,lToken,pReplace) 
 to pass in the key name, the encrypted key, and whether to replace or not if it already exists.
 It uses CSNBKRC2 to add the record, if the record exists, and pReplace = Y then use deleteCKDS to delete it, and retry the add.
@@ -123,6 +125,10 @@ removes the record from the CKDS.  This uses CSNBKRD
 ### addPKDS(pKey,pToken,lToken,pReplace) 
 to pass in the key name, the encrypted key, and whether to replace or not
 It uses CSNDKRC to add the record, if the record exists, and pReplace = Y then use deletePKDS to delete it, and retry the add.
+
+### csfgetrc(reason)
+Takes the reason code, and returns a string describing the reason code(for this problems I experienced).
+
 ### deletePKDS(pKey) 
 removes the record from the CKDS.  This uses CSNDKRD 
 
