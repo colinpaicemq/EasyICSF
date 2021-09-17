@@ -54,7 +54,7 @@ Where SKELEAS(), GENAES(), addckds() are helper rexx execs which issue the ICSF 
 
 See [REXX](Rexx.md) for more details
 
-##Example of C code
+## Example of C code
 
 ```
  rc =exportAES (pKey,pKek,&pData, &lData); 
