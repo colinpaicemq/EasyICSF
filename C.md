@@ -1,4 +1,4 @@
-#C interface
+# C interface
 
 ## C main programs
 
@@ -90,7 +90,7 @@ doImportAES key, and returns an external key encrypted with the given public key
         - addPKDS(pKey,pData,lData,pReplace) to pass in the key name, the encrypted key, and whether to replace or not
 
 - LIST print out the CKDS and PKDS.   It lists the +KDS, displays the meta data, and displays detail information about some key types.
--     - No Parameters
+       - No Parameters
 
 - BINDOPTS these are the options for the binder( linkage editor)
 - CCOPTS   these are the C compile options
@@ -113,6 +113,7 @@ CC contains JCL to compile all the programs.   The other programs have JCL to co
 
 ##  helper functions
 
+The functions have code which takes the name of a null terminated string and converts it to a 64 character string.
 
 ### addCKDS(pKey,pToken,lToken,pReplace) 
 to pass in the key name, the encrypted key, and whether to replace or not if it already exists.
@@ -125,11 +126,15 @@ It uses CSNDKRC to add the record, if the record exists, and pReplace = Y then u
 ### deletePKDS(pKey) 
 removes the record from the CKDS.  This uses CSNDKRD 
 
-### doExists("P",pPrivate)
- to check the private key exists
+### existsP(pName)
+ to check the key name exists in the PKDS exists using CSNDKRR.
  This reads the keystore to see if the record exists.
  For PKDS it uses CSNDKRR
  For CKDS it uses CSNBKRR2
+
+### existsC(pName)
+ to check the key name exists in the CKDS exists using CSNBKRR2
+ This reads the keystore to see if the record exists.
 
 ### doImportAES(pKey,pPrivate,pType,&pData,&lData)
  to take the name of the key, the private key name the type and the data read from the file and import it
@@ -147,9 +152,11 @@ This uses rules {"AES     ",  "PKCSOAEP",  "SHA-256 "} and  CSNDSYI  to import t
  If type = Cipher then use rule =  {"AES     ", "PKOAEP2 ", "SHA-256 "} 
  If type = Data then use rule =  {"AES     ",  "PKCSOAEP",  "SHA-256 "}
  use CSNDSYX to export the key
+
 ### exportpki(pKey, &pExt, &lExt) 
-to extract the key and returns it unencrupted in pExt
+to extract the key and returns it unencrypted in pExt
 Use CSNDPKX
+
 ### GENAES2(pToken,&lToken)
  to take the skeleton and return the encrypted key. This is in member KEYAES.
  Rule rule[2]  = {"AES     ","OP      "}
@@ -160,7 +167,7 @@ Use CSNDPKX
  Uses CSNDEDH( with
 - rule =  = {"DERIV01 " ,"KEY-AES "}
 - Party = "transaction-id"
-- 
+
 ### GENPKIGEN(&pData, &lData)
  to take the skeleton, private and and return the encrypted key.  In Member KEYPKI. 
  Uses CSNDPKG with
