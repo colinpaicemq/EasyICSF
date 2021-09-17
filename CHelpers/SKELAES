@@ -1,59 +1,82 @@
 #ifndef SKELAES_INCLUDE
 #define SKELAES_INCLUDE
 #include <printAESS.h> // colin special
-int skeletonAES(char ** pData, int * lData)
+int skeletonAES(char *  type, char ** pData, int * lData)
 {
 /*-------------------------------------------------------------------*/
-/*  CSNBKTB2                                                      */
-/* Build a skeleton with the correct key usage and key management */
+/*  CSNBKTB2                                                         */
+/* Build a skeleton with the correct key usage and key management    */
+/*  Type can be E for Exporter, E for Importer C for CIPHER          */
 /*-------------------------------------------------------------------*/
   int rc;
   int rs;
   int zero = 0;
-  int rule_count  =  5 ;
-  char8 rule[ 5] ={
-   "INTERNAL","AES     ","CIPHER  ",
-   "XPRTCPAC","ANY-MODE"
-   };
-   char * pRule = &rule[0][0];
- //"NOEX-SYM","NOEX-RAW","NOEXUASY","NOEXAASY","NOEX-DES","NOEX-AES",
- //"NOEX-RSA"};
-   int lKeyToken=725;
-   char * pKeyToken;
-   pKeyToken = (char *) malloc(lKeyToken);
-   if (pKeyToken == 0)
-   {
-     printf("unable to allocate storage in genaes \n");
-     return 8;
-   }
-   CSNBKTB2(
-           &rc,               /* return code                   */
-           &rs,               /* reason code                   */
-           &zero,             /* exit data length              */
-           0,                 /* exit data[]                   */
-           &rule_count,       /* rule array count              */
-           pRule,             /* rule array[]                  */
-           &zero,             /* clear key bit length          */
-           0,                 /* key value[]                   */
-           &zero,             /* key name length               */
-           0,                 /* key name[64]                  */
-           &zero,             /* user assoc data length        */
-           0,                 /* user associated data[]        */
-           &zero,             /* token data length             */
-           0,                 /* token data[]                  */
-           &zero,             /* service data length           */
-           0,                 /* service data[]                */
-           &lKeyToken,        /* target key token length       */
-           pKeyToken   );     /* target key token[]            */
- if ( rc > 0)
+  int rule_count ;
+  char * pRule;
+  char8 Crule[ 5] ={
+   "INTERNAL","AES     ","CIPHER  ", "XPRTCPAC","ANY-MODE" };
+
+  char8 Erule[ 3] ={
+  "INTERNAL", "AES     ", "EXPORTER"};
+
+  char8 Irule[ 3] ={
+  "INTERNAL", "AES     ", "IMPORTER"};
+  int iType = *type;
+  switch(iType)
+  {
+    case 'C':  // cipher
+      pRule =  &Crule[0][0];
+      rule_count = sizeof(Crule)/8;
+      break;
+    case 'E':    // exporter
+      pRule =  &Erule[0][0];
+      rule_count = sizeof(Erule)/8;
+      break;
+    case 'I': // importer
+      pRule =  &Irule[0][0];
+      rule_count = sizeof(Irule)/8;
+      break;
+    default:
+      printf("Invalid type passed in to SKELAES\n");
+      return 8;
+  }
+  int lKeyToken=725;
+  char * pKeyToken;
+  pKeyToken = (char *) malloc(lKeyToken);
+  if (pKeyToken == 0)
+  {
+    printf("unable to allocate storage in genaes \n");
+    return 8;
+  }
+  CSNBKTB2(
+          &rc,               /* return code                   */
+          &rs,               /* reason code                   */
+          &zero,             /* exit data length              */
+          0,                 /* exit data[]                   */
+          &rule_count,       /* rule array count              */
+          pRule,             /* rule array[]                  */
+          &zero,             /* clear key bit length          */
+          0,                 /* key value[]                   */
+          &zero,             /* key name length               */
+          0,                 /* key name[64]                  */
+          &zero,             /* user assoc data length        */
+          0,                 /* user associated data[]        */
+          &zero,             /* token data length             */
+          0,                 /* token data[]                  */
+          &zero,             /* service data length           */
+          0,                 /* service data[]                */
+          &lKeyToken,        /* target key token length       */
+          pKeyToken   );     /* target key token[]            */
+//  if ( rc > 0)
  {
-    printf("CSNBKTB2 rc %i rs %i %s\n",rc,rs,csfgetrc(rs));
+    printf("SKELAES:CSNBKTB2 type=%s rc %i rs %i %s\n",type,
+    rc,rs,csfgetrc(rs));
     return rc;
  }
  *lData = lKeyToken;
  free (pData); // get rid of the previous block
  *pData = pKeyToken;
- printf("skeletonAES key length %i\n",lKeyToken);
+// printf("skeletonAES key length %i\n",lKeyToken);
 // printHex(stdout,&keyToken,lKeyToken);
    printAES((char *) pKeyToken,lKeyToken,stdout);
    return 0;

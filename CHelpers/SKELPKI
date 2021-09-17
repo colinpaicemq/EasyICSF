@@ -20,7 +20,6 @@ int GENPKISKEL(
 
 //printHex(stdout,&key_value_CRT[0],lKey_value_CRT);
 
-  int i64 = 64;
   int lOutput = 6500;
   char * pOutput;
   pOutput = (char *) malloc(lOutput);

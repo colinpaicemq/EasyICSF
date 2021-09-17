@@ -2,12 +2,12 @@
 #define  DO64_INCLUDE
 #define do64(v,pp) \
 char v[64]; \
-char * p##v = (char *) &v; \
 memset(&v,' ',64); \
 for ( int i##var = 0;i##var < 64; i##var ++)\
 if (pp[i##var] == 0 ) break; \
 else v[i##var] = pp[i##var]
 #ifdef no
+// from macro char * p##v = (char *) &v; \
 char * do64(char * pIn) {
   char * pOut;
   pOut = (char *) malloc(64);

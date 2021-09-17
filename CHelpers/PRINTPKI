@@ -93,7 +93,7 @@ int printPKI( char * p,int lIn,FILE * f)
     {
       fprintf(f ,"ECC Public key\n");
            if ( *(q+8)  ==0x00) fprintf(f,"  Prime Curve\n");
-      else if ( *(q+8)  ==0x01) fprintf(f,  "Brainpool curve\n");
+      else if ( *(q+8)  ==0x01) fprintf(f,"  Brainpool curve\n");
       else if ( *(q+8)  ==0x02) fprintf(f,"  Edwardsl curve\n");
       else if ( *(q+8)  ==0x03) fprintf(f,"  Koblitz curve\n");
       sh = (short *) (q+10); // for public

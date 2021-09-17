@@ -36,7 +36,7 @@ int keyGENP(char * pPublic, // name of the public key
           0, // ignored for AES/* key encrypt key id[]    */
 
           &i64,  // label      /* RSA pub key id length   */
-          &Publicx, // Label     /* RSA pub key id[]        */
+ (char *) pPublicx, // Label     /* RSA pub key id[]        */
 
           &lLocal,            /* loc enc key token leng  */
           pLocal,              /* loc enc key token[]     */

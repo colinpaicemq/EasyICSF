@@ -1,8 +1,8 @@
 #ifndef DOIMPDAT_INCLUDE
 #define DOIMPDAT_INCLUDE
 #include <do64.h>
-int importData(char * pUnusedKey, char * pPrivate, char * pType,
-    char ** pData, int * lData)
+int importData(char * pUnusedKey, char * pKek,
+    char * pType,         char ** pData, int * lData)
 {
   //  CSNDSYI
   int rc;
@@ -10,8 +10,12 @@ int importData(char * pUnusedKey, char * pPrivate, char * pType,
   int zero = 0;
   int i64 = 64;
   int rule_count                 =  3;
-  do64(Priv,pPrivate);
-//do64(myKey ,pKey    )
+  char out[60];
+  int  lOut  = sizeof(out );
+  rc = keyType(*pData ,* lData,&out[0],&lOut );
+  printf("Imported data type %s\n",out );
+
+  do64(KEK ,pKek   );
   printf("DoImpDAT type %s\n",pType);
   char * pRule;
   char8 rule_Data[3] =
@@ -27,8 +31,8 @@ int importData(char * pUnusedKey, char * pPrivate, char * pType,
     printf("malloc for %i failed in IMPDAT\n",lOutput);
   }
 //printf("Key Name %s.\n",pKey);
-  printf("ImportData Private Key %s.\n",pPrivate);
   printf("ImportData Type %s\n",pType);
+  printf("ImportData KEK %s.\n",pKek);
   CSNDSYI (
             &rc  ,               /* return code         */
             &rs  ,               /* reason code         */
@@ -41,14 +45,14 @@ int importData(char * pUnusedKey, char * pPrivate, char * pType,
           * pData,               /* enciphered token       */
 
             &i64,                /* RSA pub key id length   */
-            pPriv,               /* RSA pub key id[]        */
+   (char *) &KEK ,               /* RSA pub key id[]        */
 
             &lOutput,           /* cca DES token length          */
             pOutput           );  /* cca DES token[64]             */
 // if( rc > 0)
    printf("CSNDSYI  rc %i rs %i %s\n",rc,rs,csfgetrc(rs));
  if (rc != 0) return rc;
-   printf("CSNDSYI  data lengt %i\n",lOutput);
+   printf("ImpDat:CSNDSYI  data lengt %i\n",lOutput);
  // get rid of input buffer
    free (*pData);
    *pData =  pOutput;

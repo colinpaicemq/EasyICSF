@@ -2,31 +2,33 @@
 #include <stdlib.h>
 #include <string.h>
 #include <string.h>
+#include </usr/include/csfbext.h>
 #include <printhx.h> // colin special
 #include <csfgetrc.h>   // colin special
 #include <read.h>  // colin special
 typedef char    char8[8];
+#include <keytype.h>  // colin special
 #include <args2.h>  // colin special
 #include <impaesh.h>  // colin special
 // #include <IMPCIP.h>  // colin special
 #include <do64.h> // colin special
 #include <addckds.h> // colin special
 #include <exists.h>     // colin special
-#include </usr/include/csfbext.h>
+#include <keytype.h>    // colin special
+#include <findkey.h>    // colin special
 // int doImportAES (char * pKey, char * pDecryptKey,
 // char  ** pData, int * lData);
 int main( int argc, char *argv??(??))
 {
-  int i;
   char * pKey   = "";
   char * pReplace = "";
-  char * pPrivate= "";
+  char * pKek    = "";
   char * pType   = "";
   char * dd     = "";
   int rc = 0;
   rc += readArgs( argc,argv,"-key",0 ,&pKey,"v");
   rc += readArgs( argc,argv,"-replace",0 ,&pReplace,"v");
-  rc += readArgs( argc,argv,"-private",0 ,&pPrivate,"v");
+  rc += readArgs( argc,argv,"-kek",0 ,&pKek,"v");
   rc += readArgs( argc,argv,"-type",0 ,&pType,"v");
   rc += readArgs( argc,argv,"-dd"    ,64,&dd    ,"v");
   if (rc > 0 )
@@ -34,8 +36,8 @@ int main( int argc, char *argv??(??))
      printf("Problem with parameters %i\n",rc);
      return 8;
   }
-  if ( pKey[0] == ' ') {rc++;printf("-key ...  is required\n");}
-  if ( pPrivate[0]== ' ') {rc++;printf("-private ... is required\n");}
+  if ( pKey[0] == 0 ) {rc++;printf("-key ...  is required\n");}
+  if ( pKek[0] == 0 ) {rc++;printf("-kek ...  is required\n");}
   if ( rc > 0) return rc;
   if ( strlen(pReplace) > 0  &&
       ( pReplace[0]=='y'  ||  pReplace[0]=='Y')
@@ -47,8 +49,21 @@ int main( int argc, char *argv??(??))
   rc=  read(dd,&pData,&lData);         // returns a buffer
 //printf("read rc %i data length %i\n",rc,lData );
   if ( rc != 0) return 8;
-
-  rc = doImportAES(pKey,pPrivate,pType,&pData,&lData);
+#ifdef no
+  char out[60];
+  int  lOut  = sizeof(out );
+  rc = keyType(pData,lData,&out[0],&lOut);
+  if ( rc == 0)
+  {
+    printf("Input data %s\n",out);
+  }
+  else
+  {
+    printf("impaes:keyType: rc %i length %i\n",rc,lOut);
+    return 8;
+  }
+#endif
+  rc = doImportAES(pKey,pKek,pType,&pData,&lData);
   if ( rc != 0) return 8;
 //printHex(stdout,pData,lData);
 

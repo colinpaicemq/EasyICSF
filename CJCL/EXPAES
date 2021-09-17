@@ -1,10 +1,18 @@
 //COLEXP  JOB 'COLIN',CLASS=A,REGION=0M,COND=(4,LE)
 //JOBLIB JCLLIB ORDER=(COLIN.ICSF.C.JCL,CBC.SCCNPRC)
 //EXPAES     EXEC  CCPROC,PROG=EXPAES
+// SET KEK='-kek  AESDHE '
+// SET KEK='-kek  RSA2PUB'
+// SET KEK='-kek  PKDS2 '
+// SET KEY='-key  RSA2PUB '
+// SET KEY='-key  AES1   '
+// SET KEY='-key  AESDHE '
 //ISTEST   EXEC PGM=EXPAES,REGION=0M,
 //*  PARM='-key REXXAES   -dd DD:AES -public  RSA2 -type D'
-//   PARM='-key REXXAES   -dd DD:AES -public  RSA2PUB -type C'
-//*  PARM='-key  AESCI   -dd DD:AES -public  RSA2 -type C'
+//*  PARM='-key REXXAES   -dd DD:AES -public  RSA2PUB -type C'
+//*  PARM='-key REXXAES   -dd DD:AES &PU -type C &EX'
+//   PARM='&KEY.  -dd DD:AES  &KEK.               '
+//*  PARM='-key  AESCI   -dd DD:AES  &EX.                '
 //*  PARM='-key  AESDATA1 -dd public -encrypt RSA1    '
 //*  PARM='-key  AESCI   -dd public -encrypt RSA1PUB   '
 //*  PARM='-key  AESCI   -dd public -encrypt RSA1PUB   '

@@ -3,12 +3,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <string.h>
+#include </usr/include/csfbext.h>
 typedef char    char8[8];
 #include <printhx.h>  // colin special
 #include <csfgetrc.h>  // colin special
 #include <exists.h>  // colin special
-#include <printAES.h>  // colin special
-#include <writekey.h>  // colin special
+// #include <printAES.h>  // colin special
+// #include <writekey.h>  // colin special
 #include <do64.h>  // colin special
 #include <args2.h>  // colin special
 #include <imppub.h >  // colin special
@@ -16,21 +17,15 @@ typedef char    char8[8];
 #include <addckds.h>  // colin special
 // #include <impaesh.h> // colin special
 #include <keyGENP.h> // colin special
-#include </usr/include/csfbext.h>
 int main( int argc, char *argv??(??))
 {
-  printf("Compiled %s %s.\n", __DATE__, __TIME__);
-  int exists;
-  char * pCert;
-  int  lCert;
+//printf("Compiled %s %s.\n", __DATE__, __TIME__);
 
-  int i;
   char * pKey   = "";
   char * pKey2  = "";  //
   char * pReplace= "";
   char * pPublic = "";
   char * pPrivate= "";
-  char * pubkey = "";
   char * dd     = "";
   char * pLocal ;
   int lLocal ;
@@ -59,8 +54,6 @@ int main( int argc, char *argv??(??))
   if ( pPrivate[0]== ' ') {rc++;printf("-private ... is required\n");}
   if ( rc > 0) return rc;
 
-//exists = checkExistsDelete("C",pKey,delete  );
-//if (exists != ) return exists;
 
   // this returns a local key and an encrypted key
   rc = keyGENP(pPublic,& pLocal, &lLocal,
@@ -75,9 +68,9 @@ int main( int argc, char *argv??(??))
   // write the external key to a dataset
   rc = writeKey(dd,pExt,lExt);
   if ( rc != 0 ) return rc;
-  // pass in the RSA encrypted, and get back the local encrypted
-  printHex(stdout,pExt,lExt);
-
+//// pass in the RSA encrypted, and get back the local encrypted
+//printHex(stdout,pExt,lExt);
+// or read import it into the keys store
   rc= importPub(pPrivate,&pExt,&lExt);
   if ( rc != 0 ) return rc;
 

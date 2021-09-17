@@ -43,8 +43,8 @@ char ** addr,char * flags)
        }
      }
   }
-  printf("Parameter not found %s\n",name);
+//printf("Parameter not found %s\n",name);
   *addr = "";
-  return 9;
+  return 0;
 }
 #endif

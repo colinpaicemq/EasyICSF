@@ -20,7 +20,7 @@ int addPKDS1(char * key, char * pData, int lData)
              0,                       /* exit data[]              */
              &zero,                   /* rule array count         */
              0,                       /* rule array[]             */
-  (char *)  pKey,                     /* key key[64]               */
+  (char *)  &Key,                     /* key key[64]               */
              &lData,                  /* key token length   */
   (char *)   pData); /* key token[]                   */
   if ( rc > 0)

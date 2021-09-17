@@ -12,7 +12,7 @@ int GENDH(
   do64(public,pPublic);
   do64(private,pPrivate);
   printf("Public %s\n",pPublic);
-  printf("Privatec %s\n",pPrivate);
+  printf("Private %s\n",pPrivate);
   int rc;
   int rs;
   int zero = 0;
@@ -27,11 +27,9 @@ int GENDH(
 //char *pkeyType2 = "        ";
 
   int i64 = 64;
-  int l725 = 725;
   int lParty = 14;
-  int l = * lData;
-//printf("CSNDEDH before length data %i\n",l);
-  l = 900;
+//int l = * lData;
+//l = 900;
   char * pParty = "transaction-id";
   // the token coming in can be short (eg 56 bytes)
   // but it generates up to 900 bytes
@@ -95,9 +93,6 @@ int GENDH(
   free(*pData);
   *pData = pOutput;
   * lData = lOutput;
-//printf("CSNDEDH after length data %i\n",lOutput);
-// lData = l   ;
-//* pData
   return rc;
 }
 #endif

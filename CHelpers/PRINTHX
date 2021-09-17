@@ -1,5 +1,6 @@
 #ifndef PRINTHEX_INCLUDE
 #define PRINTHEX_INCLUDE
+#include <ctype.h>
 #define ASCII_STRING \
                 "................" \
                 "................" \
@@ -16,7 +17,7 @@
             "................" \
             "................"
 const char ascii_tab[256] = ASCII_STRING ;
-      char other_tab[256];
+//    char other_tab[256];
 void printHex(FILE * pFile,void *buff, int length)
 {
   char sepchars[2] = {' ',' '};
@@ -50,7 +51,7 @@ void printHex(FILE * pFile,void *buff, int length)
      ********************************************************/
   fprintf(pFile," %c", sepchars[0]);
   for( j=0; j<bytesleft; j++ ) {
-          printchar = isprint(*(pbuff+j)) ? *(pbuff+j) : '.';
+          printchar = (char) isprint(*(pbuff+j)) ? *(pbuff+j) : '.';
           fprintf(pFile,"%c",printchar);
   }
   /**********************************************************

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <string.h>
+#include </usr/include/csfbext.h>
 typedef char    char8[8];
 #include <csfgetrc.h>  // colin special
 #include <printhx.h>  // colin special
@@ -11,19 +12,11 @@ typedef char    char8[8];
 #include <SKELPKI.h> // colin special
 #include <KEYPKI.h> // colin special
 #include <exists.h>  // colin special
-#include </usr/include/csfbext.h>
 //nclude <SKELPKI.h>  // colin special
 int main( int argc, char *argv??(??))
 {
-  int i;
   char * pKey   = "";
   char * pReplace = "";
-  char * pPrivate= "";
-  char * pPublic = "";
-  static int i64 = 64;
-  int lLocal ;
-  int    lExt;
-  char * pExt;
   int rc = 0;
   rc += readArgs( argc,argv,"-key",0,&pKey,"v");
   rc += readArgs( argc,argv,"-replace",0,&pReplace,"v");

@@ -8,15 +8,26 @@ char *csfgetrc(int rc)
     char * reason;
   } rcdata;
   rcdata rclist[] = {
+    {   47,"A source key token is unusable because it contains"
+           " data that is not valid or undefined."},
     {  762,"The key values structure for CSNDPKB has a field in error"
             "A length or format is not correct"},
     { 2012,"The rule_array_count parameter contains a"
            " number that is not valid."},
     { 2016,"The rule_array parameter contents are incorrect"},
-    { 2040,"Wrong key type eg internal/external"},
+    { 2040,"Wrong key(KEK?) type eg internal/external"},
     { 2054,"RSA:OAEP optional encoding parameters failed validation"},
-    { 2089,"The algorithm does not match the algorithm"
-           " of the key identifier"},
+    { 2055,"The RSA public key is too small to encrypt the DES key"},
+    { 2089,"The algorithm from the KEK does not match the algorithm"
+           " of the source key identifier\n"
+           "Or you are trying to use a non RSA public/private where"
+           " an RSA is expected"},
+    { 2141,"A key verification pattern failed to verify. "
+           "Either the key-encrypting key provided to unwrap an "
+           "encrypted key contained in an external key-token "
+           "is incorrect or an external key-token is invalid"
+           "\nPerhaps trying to decrypt an RSA encrypted with an "
+           "AES key"},
     { 3343,"The record is Deactivated. The validity date is past"},
     { 3344,"The record is Active-Archived and cannot be used"},
     {10012,"Key not found" },
@@ -28,6 +39,8 @@ char *csfgetrc(int rc)
            "there is a a prohibit-export restriction on the key"},
     {10126,"rule_array parameter is not consistent"},
     {11000,"Invalid length for a key token, key, or text field"},
+    {11012,"The internal or external private key token contains "
+           "flags that are not valid"},
     {11040,"Inconsistent formatting method (eg PKA92) used     "},
     {11056,"The input PKA token contains "
             "length fields that are not valid"},
@@ -39,7 +52,6 @@ char *csfgetrc(int rc)
     {16056,"The coprocessor failed"},
     {0    ,"No error found"}
                      };
-  rcdata * pRC;
   int size;
   int i;
   size = sizeof(rclist)/sizeof(rclist[0]);

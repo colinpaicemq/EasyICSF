@@ -7,7 +7,6 @@ int GENPKIGEN(
 {
   int rc;
   int rs;
-  int i64 = 64;
   int zero = 0;
   int lOutput=  6500;
   char * pOutput;

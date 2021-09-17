@@ -3,10 +3,10 @@
 #include <string.h>
 #include <exists.h>
 #include <printhx.h>
+#include </usr/include/csfbext.h>
 #include <csfgetrc.h>  // colin special
 #include <printaes.h>  // colin special
 #include <printpki.h>  // colin special
-#include </usr/include/csfbext.h>
 void listData(char which[8], char state[8],FILE *);
 int  metaData(char type[8],char * label, FILE *);
 int printData(char *, char *, FILE *);
@@ -247,7 +247,9 @@ int printData(char * pWhich, char * pKey,FILE * pF)
    if (rc != 0) return rc;
    if (*pData+4  ==  0x05)
       printAES(pData,lData,pF);
-   else if (*pData+0  ==  0x1f)
+   else if (*pData+0  ==  0x1f) // internal
+      printPKI(pData,lData,pF);
+   else if (*pData+0  ==  0x1E)  // external
       printPKI(pData,lData,pF);
    else
    {

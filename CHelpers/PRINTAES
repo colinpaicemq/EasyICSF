@@ -91,7 +91,6 @@ int printAES( char * p,int l,FILE * f)
         && p[k] == pR[j].h )
       fprintf(f,"   %s\n",pR[j].reason);
     }
-  short   adl = p[32];
   char    kl  = p[34];
   char    iead= p[35];
   char    uad = p[36];
@@ -99,11 +98,10 @@ int printAES( char * p,int l,FILE * f)
   char    kmf = p[45+ kuf*2];
   if ( kl  > 0)
   {
-     int i;
+     int ii;
      char * kn =  &p[46+kuf*2+kmf*2];
-//   printHex(f     ,&p[46+kuf*2+kmf*2],kl);
-     for (i = 0;i<kl;i++)
-        kn[i]=ascii_tab[kn[i]];
+     for (ii  = 0;ii < kl; ii ++)
+        kn[ii]=ascii_tab[kn[ii]];
      fprintf(f,"   Key name from record(ASCII):%*.*s\n",kl,kl,kn);
   }
   if (iead > 0)
@@ -117,5 +115,6 @@ int printAES( char * p,int l,FILE * f)
      printHex(f     ,&p[46+kuf*2+kmf*2]+kl+iead,uad);
   }
   fprintf(f,"}\n");
+  return 0;
 }
 #endif

@@ -1,4 +1,4 @@
-// generate a DH Cipher key
+// generate exporter|importer|cipher DH key
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -19,11 +19,13 @@ int main( int argc, char *argv??(??))
   char * pReplace = "";
   char * pPrivate= "";
   char * pPublic = "";
+  char * pType = "";
   int rc = 0;
   rc += readArgs( argc,argv,"-key",0 ,&pKey,"v");
   rc += readArgs( argc,argv,"-replace",0 ,&pReplace,"v");
   rc += readArgs( argc,argv,"-public",0 ,&pPublic,"v");
   rc += readArgs( argc,argv,"-private",0 ,&pPrivate,"v");
+  rc += readArgs( argc,argv,"-type",0 ,&pType,"v");
   if (rc > 0 )
   {
      printf("Problem with parameters %i\n",rc);
@@ -32,6 +34,7 @@ int main( int argc, char *argv??(??))
   if ( pKey[0] == ' ') {rc++;printf("-key ...  is required\n");}
   if ( pPublic[0] == ' ') {rc++;printf("-public ...  is required\n");}
   if ( pPrivate[0] == ' ') {rc++;printf("-private ...  is required\n");}
+  if ( pType[0] == ' ') {rc++;printf("-type E|I|C  is required\n");}
   if ( rc > 0) return rc;
 
   if (rc != 0) return rc;
@@ -42,13 +45,13 @@ int main( int argc, char *argv??(??))
   // build skeleton
   char * pData;
   int lData;
-  rc = doExists("P",pPrivate);
+  rc = existsP(pPrivate);
   if (rc != 0)
   {
     printf("private key not found %s\n",pPrivate);
     return rc;
     }
-  rc =  doExists("P",pPublic );
+  rc =  existsP(pPublic );
   if (rc != 0)
   {
     printf("public  key not found %s\n",pPublic );
@@ -57,7 +60,7 @@ int main( int argc, char *argv??(??))
   //
   //       Now the ICSF processing
   //
-  rc =  skeletonAES("C",&pData, &lData);
+  rc =  skeletonAES(pType,&pData, &lData);
   if (rc != 0) return rc;
 
   rc= GENDH(pPrivate, pPublic,& pData,& lData);

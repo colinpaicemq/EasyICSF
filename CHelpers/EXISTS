@@ -6,9 +6,12 @@ int findBlank(char * p)
 {
   int i;
   for (i = 0;i< 64;i++)
-  if (p[i] == ' ') break;
-   return i;
+  {
+    if (p[i]  == ' ') break;
+  }
+  return i;
 }
+int readKS( char * which,  char * label, char ** pCert, int * lCert);
 int doExists( char * which,  char * labin)
 {
   int rc ;
@@ -44,15 +47,16 @@ int readKS( char * which,  char * label, char ** pCert, int * lCert)
              0,                       /* exit data[]              */
              &zero,                   /* rule array count         */
              0,                       /* rule array[]             */
-             pLab,                    /* key label[64]             */
+  (char * )  &Lab,                    /* key label[64]             */
             &lToken,                  /* key token length   */
   (char *)  pToken
                             );/* key token[]                   */
-  int l;
-  l = findBlank(label);
-  if ( rc > 0)
-    printf("CSNBKRR2 read %*.*s CKDS rc %i rs %i %s\n",l,l,label,
-           rc,rs,csfgetrc(rs));
+//int l;
+//printf("LABEL %s.\n",label);
+//l = findBlank(label);
+//if ( rc > 0)
+    printf("Exists: CSNBKRR2 read %s CKDS rc %i rs %i %s\n",
+            label,rc,rs,csfgetrc(rs));
   *lCert = lToken;
 //  printHex(stdout,pToken,lToken);
   return rc;
@@ -67,15 +71,15 @@ int readKS( char * which,  char * label, char ** pCert, int * lCert)
              0,                       /* exit data[]              */
              &zero,                   /* rule array count         */
              0,                       /* rule array[]             */
-  (char *)   pLab,                    /* key label[64]             */
+  (char *)   &Lab,                    /* key label[64]             */
              &lToken,                  /* key token length   */
   (char *)   pToken
                             );/* key token[]                   */
-  int l;
-  l = findBlank(label);
-  if ( rc > 0)
-  printf("CSNDKRR  read %*.*s PKDS rc %i rs %i %s %s.\n",l,l,label,
-      rc,rs,csfgetrc(rs));
+//int l;
+//l = findBlank(label);
+//if ( rc > 0)
+  printf("Exists: CSNDKRR  read %s PKDS rc %i rs %i %s %s.\n",
+            label, rc,rs,csfgetrc(rs));
   *lCert = lToken;
 //printHex(stdout,pToken,lToken);
   return rc;
@@ -100,5 +104,11 @@ int checkExistsDelete(char * which,  char * labin, char * delete)
     }
   }
   return exists;
+}
+int existsP(char * key){
+return doExists("P", key);
+}
+int existsC(char * key){
+return doExists("C", key);
 }
 #endif

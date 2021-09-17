@@ -2,18 +2,24 @@
 #define IMPAESH_INCLUDE
 #include <impdat.h>
 #include <impcip.h>
-int doImportAES (char * pKey, char * pPrivate, char * pType,
+int doImportAES (char * pKey, char *pKek,
+    char * pType,
     char ** pData, int * lData)
 {
-  if (*pType == 'D') // a data type key
-  return importData(pKey,pPrivate,pType,pData,lData);
-  else
-  if (*pType == 'C') // a data type key
-  return importCipher(pKey,pPrivate,pType,pData,lData);
-  else
+  int rc;
+  char rawType[60];
+  int lRawType = sizeof(rawType);
+  rc = keyType(*pData,*lData ,&rawType[0],&lRawType);
+  if ( rc != 0)
   {
-     printf("Invalid type:needs to be Data or Cipher\n");
-     return 8;
+     printf("keyType input data return code %s %i\n",pKey,rc);
+     return rc;
   }
+  printf("IMPAESH:input raw data:%s\n",rawType);
+  if(rawType[0] == '?')  // PKI encrypted DATA ?
+     return importData(pKey,pKek,pType,pData,lData);
+   else
+     return importCipher(pKey,pKek,rawType,pData,lData);
+  //
 }
 #endif

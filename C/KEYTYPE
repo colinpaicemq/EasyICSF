@@ -12,36 +12,37 @@ typedef char    char8[8];
 #include <exists.h>  // colin special
 //nclude <zo64.h>  // colin special
 #include <args2.h>  // colin special
-#include <writekey.h>  // colin special
-#include <expaesk.h>  // colin special
+#include <exists.h>  // colin special
+#include <keytype.h>  // colin special
+#include <findkey.h>  // colin special
 int main( int argc, char *argv??(??))
 {
 
   char * pKey   = "";
-  char * pKek    = "";
-  char * dd     = "";
+  char * pType  = "";
   int rc = 0;
   rc += readArgs( argc,argv,"-key",0 ,&pKey,"v");
-  rc += readArgs( argc,argv,"-kek",0 ,&pKek,"v");
-  rc += readArgs( argc,argv,"-dd"    ,0 ,&dd    ,"v");
+  rc += readArgs( argc,argv,"-type"  ,0 ,&pType ,"v");
   if (rc > 0 )
   {
      printf("Problem with parameters %i\n",rc);
      return 8;
   }
   if ( pKey[0] == 0 ) {rc++;printf("-key ...  is required\n");}
-  if ( pKek[0] == 0 ) {rc++;printf("-kek ...  is required\n");}
-  if ( dd[0] == 0  ) {rc++;printf("-dd ... is required\n");}
-  if ( rc > 0) return rc;
 
-  int   lData;
-  char * pData;
-  rc =exportAES (pKey,pKek,&pData, &lData);
-  if (rc > 0 ) return rc;
-  rc = writeKey(dd,pData,lData);
-  printHex(stdout,pData,16);
-  if (rc > 0 ) return rc;
-  printf("export of %s successful\n",pKey);
- return rc;
+  char * pRecord;
+  int lRecord;
+  rc = findKey(pType,pKey,&pRecord,&lRecord);
+  if ( rc != 0)
+  {
+     printf("findKey return code %s %i\n",pKey,rc);
+     return rc;
+  }
+  char data[60];
+  int  lData = sizeof(data);
+  rc = keyType(pRecord,lRecord,&data[0],&lData);
+  if (rc != 0)
+    printf("return code from keyType %i, length %i\n",rc,lData);
+  printf("key %-16s:%s.\n",pKey,data);
+  return 0;
 }
-
