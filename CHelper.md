@@ -54,7 +54,7 @@ There is a list of my interpretation of ICSF reason codes [here](https://colinpa
 
 
 
-### [addCKDS(pKey,pToken,lToken,pReplace)](CHelpers/ADDCKDS){addCKDS} 
+### [addCKDS(pKey,pToken,lToken,pReplace)](CHelpers/ADDCKDS){#addCKDS} 
 Pass in the key name, the encrypted key, and whether to replace or not if it already exists.
 It uses CSNBKRC2 to add the record, if the record exists, and pReplace = Y then use deleteCKDS to delete it, and retry the add.
 
