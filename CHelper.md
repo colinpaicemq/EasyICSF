@@ -70,22 +70,25 @@ It uses CSNDKRC to add the record, if the record exists, and pReplace = Y then u
 Takes the reason code, and returns a string describing the reason code(for this problems I experienced).
 
 ### deleteCKDS
-[deleteCKDS(pKey)]((CHelpers/DELCKDS)
+[deleteCKDS(pKey)](CHelpers/DELCKDS)
 Removes the record from the CKDS.  This uses CSNBKRD.
 
 ### deletePKDS
 [deletePKDS(pKey)](CHelpers/DELPKDS)
 Removes the record from the CKDS.  This uses CSNDKRD.
 
-### existsP(pName) {existP}
+### existsP
+[existsP(pName)] (CHelpers/EXISTS)
 Check the key name exists in the PKDS exists using CSNDKRR.
 This reads the PKDS keystore to see if the record exists.
 
-### existsC(pName) {existC}
+### existsC
+[existsC(pName)] (CHelpers/EXISTS)
 Check the key name exists in the CKDS exists using CSNBKRR2
 This reads the CKDS keystore to see if the record exists.
 
-### findKey(type,pKey, &pData,&lData) {findKey}
+### findKey
+[findKey(type,pKey, &pData,&lData)]((CHelpers/FINDKEY)
 Return the key from the CKDS or PKDS.  If type is 
 
 - "P" look only in the PKDS
@@ -93,7 +96,8 @@ Return the key from the CKDS or PKDS.  If type is
 - " " look in both starting with the CKDS
 
 
-### importAES(pKey,pKek,&pData,&lData) {importAES}
+### importAES
+[importAES(pKey,pKek,&pData,&lData](CHelpers/IMPAESH)
 Take the name of the key, the private key name, and the blob of data read from the file and import it.
 It looks at the blob of data and deduces what type it is, 
 
@@ -103,15 +107,18 @@ It looks at the blob of data and deduces what type it is,
 
 it uses the transportation (KEK) key in pKEK to decrypt it, and the master key to encrypt it locally, before passing the data back.
  
-### int importCipher(pKey, pPrivate, pTypeUnused, &pData,&lData) {importCipher}
+### int importCipher
+[importCipher(pKey, pPrivate, pTypeUnused, &pData,&lData)](CHelpers/IMPCIP)
 This uses rules  {"AES     ",  "PKOAEP2 "} and CSNDSYI2 to import the data.  It uses the private key to decrypt it, and the local master key to encrypt it, and passes it back to the caller.
 It takes the pKey name, and stores it as part of the certificate.
 
  
-### importData int importData (pUnused_Key, pPrivate, pTypeUnused, pData, lData) {importData}
+### importData  
+[importData (pUnused_Key, pPrivate, pTypeUnused, pData, lData)](CHelpers/IMPDAT)
 This uses rules {"AES     ",  "PKCSOAEP",  "SHA-256 "} and  CSNDSYI  to import the data.   It uses the private key to decrypt it, and stores it locally under the master key.
 
-### exportAES(pKey,pPublic,&pData, &lData) {exportAES}
+### exportAES
+[exportAES(pKey,pPublic,&pData, &lData)](CHelpers/EXPAESK)
  to extract the key into pData, where the data is encrypted with the public key.
 
 - If type = Cipher then use rule =  {"AES     ", "PKOAEP2 ", "SHA-256 "} 
@@ -119,48 +126,59 @@ This uses rules {"AES     ",  "PKCSOAEP",  "SHA-256 "} and  CSNDSYI  to import t
 
 Use CSNDSYX to export the key
 
-### exportpki(pKey, &pData, &lData) {exportpki}
+### exportpki
+[exportpki(pKey, &pData, &lData)](CHelpers/EXPPKI)
 Extract the key and returns it unencrypted in pData.  It use CSNDPKX.
 
-### GENAES2(pToken,&lToken) {GENAES2}
+### GENAES2 
+[GENAES2(pToken,&lToken) ](CHelpers/KEYAES)
 Take the skeleton and return the encrypted key. This is in member KEYAES.
  Rule rule[2]  = {"AES     ","OP      "}.  
  It uses CSNBKGN2 with keyType1 = "TOKEN   " to say skeleton is passed in.
  
-### GENDH(pPrivate, pPublic,& pData,& lData) {GENDH}
+### GENDH
+[GENDH(pPrivate, pPublic,& pData,& lData)](CHelpers/GENH)
 Take the private name, public key name, and the skeleton and return the encrypted key. This is in member keyDH.
  Uses CSNDEDH( with
 
 - rule =  = {"DERIV01 " ,"KEY-AES "}
 - Party = "transaction-id"
 
-### GENPKIGEN(&pData, &lData) {GENPKIGEN}
+### GENPKIGEN 
+[GENPKIGEN(&pData, &lData)](CHelpers/KEYPKI)
 Take the skeleton, private and and return the encrypted key. This is in member KEYPKI. 
  Uses CSNDPKG with
 
 - rule  = {"MASTER  " }
-### GENPKISKEL(pKey,&pData,&lData) {GENPKISEL}
+### GENPKISKEL
+[GENPKISKEL(pKey,&pData,&lData)](CHelpers/SKELPKI)
 Generates a PKI skeleton. Pass in the key name (for storing in the key) and returns the skeleton. This  is in member SKELPKI.
 Uses CSNDPKB with
 
 - rule  = {"RSA-CRT " ,"KEY-AES "}; 
-### importPub(pPrivate,&pExt,&lExt) {importPub} 
+### importPub
+[importPub(pPrivate,&pExt,&lExt)](CHelpers/IMPPUB)
 Takes the external blob, decrypts it using the private key, and returns the local version of it, encrypted with the local master key.
 It uses CSNDSYI with
 - rule = {"AES     ", "PKCS-1.2", "OP      "}
-### keyGENP(pPublic,&pLocal, &lLocal, &pExt, &lExt) {keyGENP}
+
+### keyGENP 
+[keyGENP(pPublic,&pLocal, &lLocal, &pExt, &lExt)](CHelpers/KEYGENP)
 This generates a 2 part key. It creates a local key in pLocal, and the external version(encrypted with the specified public key) in pExt.
  Uses CSNDSYG with the rule
  
 - rule = {"AES     ", "PKCS-1.2","OP      "}; 
 
-### keyType (pData,lData, &output,&lOutput) {keyType}
+### keyType
+[keyType (pData,lData, &output,&lOutput)](CHelpers/KEYTYPE)
 Pass in a blob, and return a string descriptor.
 
-### read(dd,&pData,&lData) {read}
+### read
+[read(dd,&pData,&lData)](CHelpers/READ)
 Read from the data set, return the data. dd is a string like "dd:CERT" used in fopen.   This maps to a data set in JCL with //CERT..  It has No ICSF functions
 
-### skeletonAES(pType,& pToken,& lToken) {skeletonAES}
+### skeletonAES
+[skeletonAES(pType,& pToken,& lToken)](CHelpers/SKELAES)
 Return an AES skeleton in pToken.  Ptype can be E|I|C for Exporter, Importer, Cipher key.
 This uses CSNBKTB2 with
 
@@ -168,15 +186,19 @@ This uses CSNBKTB2 with
 - Importer  "INTERNAL","AES     ","IMPORTER"
 - Exporter  "INTERNAL","AES     ","EXPORTER"
 
-### writeKey(dd,pData,lData) {writekey}
+### writeKey 
+[writeKey(dd,pData,lData)](CHelpers/WRITEKEY)
  to write to the data set. dd is a string like "dd:CERT" used in fopen.  This uses no ICSF functions.
 
-### printAES(pData, lData, File) {printAES}
+### printAES
+[printAES(pData, lData, File)](CHelpers/PRINTAES)
 Formats the AES data blob to the File handle, such as stdout.
 
-### printPKI(Data, lData, File) {printPKI}
+### printPKI
+[printPKI(Data, lData, File)](CHelpers/PRINTPKI)
 Formats the PKI data blob to the File handle, such as stdout.
 
-### do64(Name,pKey) {do64}
+### do64
+[do64(Name,pKey)](CHelpers/DO64)
 Creates a variable Name, from the null terminated string pKey - it takes the first 64 characters. 
 
