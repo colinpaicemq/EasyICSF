@@ -22,9 +22,11 @@ int main( int argc, char *argv??(??))
 
   char * pKey   = "";
   char * pReplace = "";
+  char * pType = "";
   int rc = 0;
   rc += readArgs( argc,argv,"-key",0,&pKey,"v");
   rc += readArgs( argc,argv,"-replace",0,&pReplace,"v");
+  rc += readArgs( argc,argv,"-type",0 ,&pType,"v");
   if (rc > 0 )
   {
      printf("Problem with parameters %i\n",rc);
@@ -34,7 +36,9 @@ int main( int argc, char *argv??(??))
   {
      rc++;printf("-key ...  is required\n");
   };
+  if ( pType[0] == ' ') {rc++;printf("-type E|I|C  is required\n");}
   if ( rc > 0) return rc;
+  // optional
   if ( strlen(pReplace) > 0  &&
        ( pReplace[0]=='y'  ||  pReplace[0]=='Y')
      ) pReplace = "Y";
@@ -44,11 +48,11 @@ int main( int argc, char *argv??(??))
    int  lToken;
 
    // build the skeleton
-   rc = skeletonAES("C",& pToken,& lToken);
+   rc = skeletonAES(pType,& pToken,& lToken);
    if ( rc != 0 ) return rc;
    // input the skeleton
    // output the token
-   rc = GENAES2(pToken,&lToken);
+   rc = GENAES2(pType,pToken,&lToken);
     if ( rc != 0 ) return rc;
 
     rc = addCKDS(pKey,pToken       ,lToken,pReplace);

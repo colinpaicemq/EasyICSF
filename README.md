@@ -63,17 +63,17 @@ See [REXX](Rexx.md) for more details
 ```
 You pass in the null terminated C string pKey, and the label of the key to be used for 
 encryption (the Key Encryption Key).  It returns a pointer to a blob of data pData,
-or length lData).
+with length lData).
 It writes the data to the data set //CERT .... 
 
 The exportAES routine has logic to detect if the KEK is a PKI key, or an AES Exporter key,
 and chooses the appropriate options.
 
-See [C examples](C.md). 
+See [C Documentation](C.md). 
 
 There are helper routines for example
 
-- ADDCKDS to add blob of data to the CKDS with the given key name
-- DELCKDS to delete a key entry from the CKDS 
-- CSFGETRC to get the error string for some reason codes (the ones I experienced).
-- GENDH generate a Diffie- Hellman symmetric key, passing the private and public key names.   
+- ADDCKDS(pKey,pData,lData) to add blob of data to the CKDS with the given key name
+- DELCKDS(pKey) to delete a key entry from the CKDS 
+- CSFGETRC(rc,rs) to get the error string for some reason codes (the ones I experienced).
+- GENDH(pPublic,pPrivate) generate a Diffie- Hellman symmetric key, passing the private and public key names.   

@@ -1,0 +1,120 @@
+#ifndef PRINTAES_INCLUDE
+#define PRINTAES_INCLUDE
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <string.h>
+int printAES( char * p,int l,FILE * f)
+{
+//printf("Compiled %s %s.\n", __DATE__, __TIME__);
+  typedef struct rclist
+  {
+    int value;
+    char h;
+    char * reason;
+  } rcdata;
+//printf("Dump of record \n");
+//printHex(stdout,p,l);
+  if ( l == 64)
+  {
+//  printHex(f,p,l);
+    fprintf(f,"It looks like a fixed length record \n");
+    if (*p+0 == 0x01) fprintf(f,"  Internal key token\n");
+    #ifdef deltet
+    if (*p+4 == 0x04) fprintf(f,"AES internal fixed length\n");
+    if (*p+4 == 0x00) fprintf(f,"CCA token\n");
+    if (*p+4 == 0x01) fprintf(f,"CCA token\n");
+    if (*p+4 == 0xF0) fprintf(f,"RCS token\n");
+    if (*p+4 == 0xF1) fprintf(f,"RCS token\n");
+    #endif
+   return 0;
+  }
+  rcdata   pR[] =
+               { {0,0x00,"Null token"},
+                 {0,0x01,"Internal token"},
+                 {0,0x02,"External token"},
+                 {0,0x00,"Null token"},
+                 {4,0x05,"Version 5 "},
+                 {8,0x00,"Wrapping No key"},
+                 {8,0x01,"Wrapping clear(internal)"},
+                 {8,0x02,"Wrapping "
+           "key is encrypted under a key-encrypting key (external)"},
+                 {8,0x00,"Wrapping "
+           "key is encrypted under the master key (internal)"},
+                 { 9,0x00,"Key Verification:None"},
+                 { 9,0x01,"Key Verification:AES master"},
+                 { 9,0x02,"Key Verification:Key Enk"},
+                 { 9,0x03,"Key Verification:Trunc AES master"},
+                 {26,0x00,"Wrapping Method:Key in clear"},
+                 {26,0x02,"Wrapping Method:AESKW"},
+                 {26,0x03,"Wrapping Method:PKOAEP2"},
+                 {27,0x00,"Hash. Non for clear key"},
+                 {27,0x01,"Hash. SHA-1"},
+                 {27,0x02,"Hash. SHA-256"},
+                 {27,0x04,"Hash. SHA-384"},
+                 {27,0x08,"Hash. SHA 512"},
+                 {28,0x00,"Variable length payload"},
+                 {28,0x01,"Fixed length payload"},
+                 {41,0x01,"Key Use alg DES"},
+                 {41,0x02,"Key Use alg AES"},
+                 {41,0x03,"Key Use alg HMAC"},
+                 {43,0x01,"Key type:Cipher"},
+                 {43,0x02,"Key type:Mac"},
+                 {43,0x03,"Key type:Exporter"},
+                 {43,0x04,"Key type:Importer"},
+                 {43,0x05,"Key type:PinProt"},
+                 {43,0x06,"Key type:PinCalc"},
+                 {43,0x07,"Key type:PinPRW"},
+                 {43,0x08,"Key type:DESUSECV"},
+                 {43,0x09,"Key type:PinGENKY"},
+                 {43,0x0A,"Key type:SecMsg"},
+                 {43,0x09,"Key type:PinGENKY"},
+                 {47,0x00,"Key used:CBC"},
+                 {47,0x01,"Key used:ECB"},
+                 {47,0x02,"Key used:CFB"},
+                 {47,0x03,"Key used:ECB"},
+                 {47,0x04,"Key used:GCM"},
+                 {47,0x05,"Key used:XTS"},
+                 {47,0x06,"Key used:FF1"},
+                 {47,0x07,"Key used:FF2"},
+                 {47,0x08,"Key used:FF2.1"},
+                 {47,0xff,"Key used:Any"}
+               };
+  int i,j,k;
+  i          =  sizeof(pR)/sizeof(pR[0]);
+  fprintf(f,"print variable key \n");
+  fprintf(f,"{\n");
+  for (j = 0;j< i;j++ )
+  {
+    k = pR[j].value;
+    if (k < l
+        && p[k] == pR[j].h )
+      fprintf(f,"   %s\n",pR[j].reason);
+    }
+  char    kl  = p[34];
+  char    iead= p[35];
+  char    uad = p[36];
+  char    kuf = p[44];
+  char    kmf = p[45+ kuf*2];
+  if ( kl  > 0)
+  {
+     int ii;
+     char * kn =  &p[46+kuf*2+kmf*2];
+     for (ii  = 0;ii < kl; ii ++)
+        kn[ii]=ascii_tab[kn[ii]];
+     fprintf(f,"   Key name from record(ASCII):%*.*s\n",kl,kl,kn);
+  }
+  if (iead > 0)
+  {
+     fprintf(f,"IBM extended data\n");
+     printHex(f     ,&p[46+kuf*2+kmf*2]+kl,iead);
+  }
+  if (uad  > 0)
+  {
+     fprintf(f,"Installation defined\n");
+     printHex(f     ,&p[46+kuf*2+kmf*2]+kl+iead,uad);
+  }
+  fprintf(f,"}\n");
+  return 0;
+}
+#endif

@@ -1,11 +1,16 @@
 #ifndef KEYTYPE_INCLUDE
 #define KEYTYPE_INCLUDE
 #define isRSA(a)      memcmp(&a[18] ,"RSA",3)     ==0
+#define isECC(a)      memcmp(&a[18] ,"ECC",3)     ==0
+#define isECCPRIV(a)  memcmp(&a[18] ,"ECCPRIV",7) ==0
+#define isECCPUB(a)   memcmp(&a[18] ,"ECCPUB" ,6) ==0
 #define isRSAPRIV(a)  memcmp(&a[18] ,"RSAPRIV",7) ==0
+#define isRSAPUB(a)   memcmp(&a[18] ,"RSAPUB",6)  ==0
 #define isAES(a)      memcmp(&a[9]  ,"SYM",3)     ==0
-#define isAESFIXED(a) memcmp(&a[ 9] ,"AESFIX",6)     ==0
+#define isAESFIXED(a) memcmp(&a[ 9] ,"AESFIX",6)  ==0
 #define isEXPORTER(a) memcmp(&a[18] ,"EXP",3)     ==0
 #define isIMPORTER(a) memcmp(&a[18] ,"IMP",3)     ==0
+#define pECCType(a)          &a[27]
 void doPub(char * pOutput,char * pFormat, char * pIn)
 {
    char * pEnd;
@@ -30,6 +35,67 @@ void doPub(char * pOutput,char * pFormat, char * pIn)
    else l =0;
    char temp[20];  // should be plenty long enough
    sprintf(&temp[0],pFormat,l);
+   strcat(pOutput,temp);
+}
+void doECCType(char * pOutput,char * pFormat, char * pIn)
+{
+   char * pEnd;
+   char * pCurr;
+   short length;
+   memcpy(&length,&pIn[2],2); // get the overall length
+   int l;
+   short ECCType;
+   l = length;
+   char * p    ;
+   pEnd = pIn + length;
+   pCurr = pIn + 8;
+   for ( pCurr = pIn + 8; pCurr < pEnd;)
+   {
+     if (pCurr[0] == 0x20 ) break;
+     memcpy(&length,&pCurr[2],2); // get the overall length
+     pCurr += length;
+   }
+   if (pCurr[0] == 0x020)  // PUBLIC key
+   {
+     memcpy(&ECCType,&pCurr[12],2); // length and type as 2 bytes
+     if (pCurr[9] ==  0x00) // PRIME NIST
+     switch(ECCType)
+     {
+       case 0x00c0: p = "NI192   ";break;
+       case 0x00E0: p = "NI224   ";break;
+       case 0x0100: p = "NI256   ";break;
+       case 0x0180: p = "NI384   ";break;
+     }
+     else
+     if (pCurr[9] ==  0x01) // Brain pool
+     switch(ECCType)
+     {
+       case 0x00A0: p = "BP160   ";break;
+       case 0x00C0: p = "BP192   ";break;
+       case 0x00E0: p = "BP224   ";break;
+       case 0x0100: p = "BP256   ";break;
+       case 0x0140: p = "BP320   ";break;
+       case 0x0180: p = "BP384   ";break;
+       case 0x0200: p = "BP512   ";break;
+     }
+     else
+     if (pCurr[9] ==  0x02) // Edwards
+     switch(ECCType)
+     {
+       case 0x00FF: p = "ED25519 ";break;
+       case 0x01c0: p = "ED448   ";break;
+     }
+     else
+     if (pCurr[9] ==  0x03) // Koblenz
+     switch(ECCType)
+     {
+       case 0x0100: p = "KO256   ";break;
+     }
+     else p = "UNKNOWN ";
+   }
+   else p = "UNKNOWN ";
+   char temp[20];  // should be plenty long enough
+   sprintf(&temp[0],pFormat,p);
    strcat(pOutput,temp);
 }
 int keyType(char * pIn  , int lIn,
@@ -147,8 +213,12 @@ int keyType(char * pIn  , int lIn,
            break;
   #endif
        case 0x10:strcat(output,"RSAPRIV  QSA        ");break;
-       case 0x20:strcat(output,"ECCPRIV             ");break;
-       case 0x21:strcat(output,"ECCPUB              ");break;
+       case 0x20:
+             doECCType(output,"ECCPRIV  %8.8s",pIn);
+             break;
+       case 0x21:
+             doECCType(output,"ECCUB    %8.8s",pIn);
+             break;
        case 0x23:strcat(output,"ECC???   KEYDERIV   ");break;
        case 0x50:strcat(output,"QSAPRIV             ");break;
        case 0x51:strcat(output,"QSAPUB              ");break;

@@ -1,0 +1,34 @@
+#ifndef DELETECKDS_INCLUDE
+#define DELETECKDS_INCLUDE
+#include <do64.h>  // colin special
+//
+//
+//
+int deleteCKDS( char * label )
+{
+  int rc = 0;
+  int rs = 0;
+  int zero = 0;
+  int rule_count   =        1;
+  char  rule[8] = "LABEL-DL" ;
+
+  //printf("Deleting label %s.\n",label );
+  do64(Lab,label);
+  CSNBKRD (
+           &rc,                    /* return code       */
+           &rs,                    /* reason code       */
+           &zero,                  /* exit data length  */
+           0,                      /* exit data[]       */
+           &rule_count,            /* rule array count  */
+           &rule[0],               /* rule array[]      */
+  (char *) &Lab             );     /* key label[64]     */
+
+  if (rc == 8 && rs == 10012)   // not found
+      rc = 0;                 // is ok
+//if (rc != 0  )
+  {
+    printf("delete CKDS %s CSNBKRD  rc %i rs %i\n",label,rc,rs);
+  }
+  return rc;
+}
+#endif

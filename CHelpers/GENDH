@@ -27,10 +27,10 @@ int GENDH(
 //char *pkeyType2 = "        ";
 
   int i64 = 64;
-  int lParty = 14;
 //int l = * lData;
 //l = 900;
   char * pParty = "transaction-id";
+  int lParty = strlen(pParty);
   // the token coming in can be short (eg 56 bytes)
   // but it generates up to 900 bytes
   // so we we have to allocate a new buffer,big enough
@@ -55,18 +55,18 @@ int GENDH(
           pRule,                   /* rule array[]        ! */
 
           &i64,                    /* Len private           */
-          pprivate,                /* private             ! */
+  (char *)&private,                /* private             ! */
 
           &zero, // l Kek
           0,                       // p KEK
 
           &i64,                    /* Len public            */
-         ppublic      ,            /* public              ! */
+ (char *) &public      ,            /* public              ! */
 
           &zero,                    /* chaining             0*/
           0,                        /* chaining ignored     0*/
-          &lParty,               /* output key id2[]      !  */
-          pParty,                // transaction-id
+          &lParty,                  // Len'randomiser string
+          pParty,                   // randomiser string
 
           &keyLength,
 

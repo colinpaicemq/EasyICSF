@@ -1,0 +1,52 @@
+#ifndef ADDCKDS_INCLUDE
+#define ADDCKDS_INCLUDE
+#include <delCKDS.h>
+#include <do64.h>  // colin special
+/* --------------------------------------------------------------- */
+/* Add a record to the keystore - if it exist already replace it   */
+/* --------------------------------------------------------------- */
+#define RECORD_EXISTS 16036
+
+int addCKDS1(char * key, char * pData, int lData)
+{
+  int rc;
+  int rs;
+  int zero = 0;
+  do64(Key,key);
+    rc= CSNBKRC2(
+               &rc  ,                   /* return code              */
+               &rs,                     /* reason code              */
+               &zero,                   /* exit data length         */
+               0,                       /* exit data[]              */
+               &zero,                   /* rule array count         */
+               0,                       /* rule array[]             */
+    (char *)  &Key,                     /* key key[64]               */
+              &lData,                   /* key token length   */
+              pData        );/* key token[]                   */
+  if ( rc > 0)
+    {
+      printf("addCKDS CSNBKRC2 add %s CKDS %i rs %i %s\n",key,
+           rc,rs,csfgetrc(rs));
+    }
+   if (rs == RECORD_EXISTS) return rs;
+
+   return rc;
+}
+int addCKDS(char * key, char * pData, int lData, char * pDelete)
+{
+  int rc;
+  int i;
+  for( i = 0; i<2; i++ )  // go round twice once with delete
+  {
+     rc = addCKDS1(key, pData,lData);
+     if (rc == 0) break;
+     if (rc == RECORD_EXISTS && pDelete[0]=='Y')
+       rc = deleteCKDS(key);
+     if (rc != 0) break;
+  }
+   if (rc == 0)
+   printf("addPKDS %s successful\n",key);
+  return rc;
+}
+
+#endif

@@ -12,7 +12,9 @@ typedef char    char8[8];
 #include <addckds.h>  // colin special
 #include <SKELAES.h> // colin special
 #include <exists.h>  // colin special
-#include <keydh  .h>  // colin special
+#include <GENDH  .h>  // colin special
+#include <findkey.h>  // colin special
+#include <keytype.h>  // colin special
 int main( int argc, char *argv??(??))
 {
   char * pKey   = "";
@@ -42,24 +44,60 @@ int main( int argc, char *argv??(??))
        ( pReplace[0]=='y'  ||  pReplace[0]=='Y')
      ) pReplace = "Y";
   else pReplace = "N";
-  // build skeleton
+  // checks keys are valid
+  // eg ECC
+  //  Check private
   char * pData;
   int lData;
-  rc = existsP(pPrivate);
+  char * pKekData;
+  int lKekData;
+  char pubOut[60];
+  int lPubOut = sizeof(pubOut);
+  char privOut[60];
+  int lPrivOut = sizeof(privOut);
+  // look in the PKDS
+  rc = findKey("P",pPrivate,&pKekData,&lKekData);
   if (rc != 0)
   {
     printf("private key not found %s\n",pPrivate);
     return rc;
     }
-  rc =  existsP(pPublic );
+  rc = keyType(pKekData,lKekData ,&privOut[0],&lPrivOut);
+  printf("Private:%s:%s\n",pPrivate,privOut);
+  if (!isECCPRIV(privOut))
+  {
+    printf("GAESXDH:Private key is not ECC Private\n");
+    return 8;
+  }
+  // public
+  // look in the PKDS
+  rc = findKey("P",pPublic ,&pKekData,&lKekData);
   if (rc != 0)
   {
-    printf("public  key not found %s\n",pPublic );
+    printf("public key not found %s\n",pPublic);
     return rc;
+    }
+  rc = keyType(pKekData,lKekData ,&pubOut[0],&lPubOut);
+  printf("Public :%s:%s\n",pPublic ,pubOut);
+  if (!(isECCPRIV(pubOut)|| isECCPUB(pubOut)))
+  {
+    printf("GAESXDH:Public key is not ECC Public or Private\n");
+    return 8;
+  }
+  //
+  char * pPubType = pECCType(pubOut);
+  char * pPrivType = pECCType(privOut);
+  // both PKI keys have to be the same type and key size
+  if ( memcmp(pPubType,pPrivType,8) != 0)
+  {
+     printf("The type and size of the ECC keys do not match."
+            " Private %8.8s Public %8.8s\n",pPrivType,pPubType);
+     return 8;
   }
   //
   //       Now the ICSF processing
   //
+  // build skeleton
   rc =  skeletonAES(pType,&pData, &lData);
   if (rc != 0) return rc;
 

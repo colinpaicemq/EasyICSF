@@ -2,15 +2,15 @@
 //JOBLIB JCLLIB ORDER=(COLIN.ICSF.C.JCL,CBC.SCCNPRC)
 //IMPAES     EXEC  CCPROC,PROG=IMPAES
 // SET T='-type C'
-// SET K='-key CCCCCCCC'
-// SET K='-key REXXAESI'
+// SET KEY='-key CCCCCCCC'
+// SET KEY='-key REXXAESI'
 // SET IM=' '
 // SET IM='-kek  AESDHI '
 // SET IM='-kek RSA2   '
 // SET IM='-kek PKDS2  '
+// SET IM='-kek RSA4096'
 //ISTEST   EXEC PGM=IMPAES,REGION=0M,
-// PARM='&K.  -replace Y &IM.  -dd dd:CERT '
-//* ARM='-key AESKEYIMP   -delete  -decrypt RSA2 -dd dd:CERT'
+// PARM='&KEY.  -replace Y &IM.  -dd dd:CERT '
 //STEPLIB  DD DISP=SHR,DSN=COLIN.LOAD
 //SYSPRINT DD SYSOUT=*,DCB=(LRECL=200)
 //SYSOUT   DD SYSOUT=*

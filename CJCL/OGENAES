@@ -3,9 +3,7 @@
 //GENAES     EXEC  CCPROC,PROG=GENAES
 //*
 // SET KEY='-key AESKEYCP2     '
-// SET TYPE='-type I'  NOT supported
 // SET TYPE='-type C'
-// SET TYPE='-type E'  NOT supported
 // SET REPLACE='-replace Y'
 //ISTEST   EXEC PGM=GENAES,REGION=0M,PARM='&KEY. &TYPE &REPLACE'
 //STEPLIB  DD DISP=SHR,DSN=COLIN.LOAD

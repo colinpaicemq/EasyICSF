@@ -16,20 +16,16 @@ typedef char    char8[8];
 #include <exists.h>     // colin special
 #include <keytype.h>    // colin special
 #include <findkey.h>    // colin special
-// int doImportAES (char * pKey, char * pDecryptKey,
-// char  ** pData, int * lData);
 int main( int argc, char *argv??(??))
 {
   char * pKey   = "";
   char * pReplace = "";
   char * pKek    = "";
-  char * pType   = "";
   char * dd     = "";
   int rc = 0;
   rc += readArgs( argc,argv,"-key",0 ,&pKey,"v");
   rc += readArgs( argc,argv,"-replace",0 ,&pReplace,"v");
   rc += readArgs( argc,argv,"-kek",0 ,&pKek,"v");
-  rc += readArgs( argc,argv,"-type",0 ,&pType,"v");
   rc += readArgs( argc,argv,"-dd"    ,64,&dd    ,"v");
   if (rc > 0 )
   {
@@ -63,7 +59,7 @@ int main( int argc, char *argv??(??))
     return 8;
   }
 #endif
-  rc = doImportAES(pKey,pKek,pType,&pData,&lData);
+  rc = importAES(pKey,pKek,&pData,&lData);
   if ( rc != 0) return 8;
 //printHex(stdout,pData,lData);
 

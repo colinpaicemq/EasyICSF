@@ -1,0 +1,128 @@
+#ifndef DOEXPAESINCLUDE
+#define DOEXPAESINCLUDE
+
+#include <do64.h>  // colin special
+#include <findkey.h>  // colin special
+#include <keytype.h>  // colin special
+
+
+/* --------------------------------------------------------------- */
+/* Export public key                                               */
+/* --------------------------------------------------------------- */
+int exportAES (char * pKey, char * pKek,
+                 char ** pData, int * lData)
+{
+  int rc;
+  int rs;
+  int i64 = 64;
+  int zero = 0;
+  int AESFixed = 0;
+  char * pMyData;
+  int lMyData;
+  char Tout[60];
+  int  lTout  = sizeof(Tout );
+  // display key info first
+  rc = findKey("C",pKey,&pMyData,&lMyData);
+  if ( rc != 0)
+  {
+     printf("findKey KEY %s return code %i\n",pKey,rc);
+     return rc;
+  }
+  rc = keyType(pMyData,lMyData ,&Tout[0],&lTout);
+  printf("KEY:%s:%s\n",pKey    ,Tout);
+  if(isAESFIXED(Tout))
+   AESFixed = 1;
+
+  lTout  = sizeof(Tout );  // must reset this as keytype changes it
+  rc = findKey(" ",pKek,&pMyData,&lMyData);
+  if ( rc != 0)
+  {
+     printf("findKey KEK %s return code %i\n",pKek,rc);
+     return rc;
+  }
+  rc = keyType(pMyData,lMyData ,&Tout[0],&lTout);
+  printf("KEK:%s:%s\n",pKek    ,Tout);
+  lTout  = sizeof(Tout );
+  // make KEK char 64
+  do64(Key64,pKey);
+  int rule_count                 =  3;
+  char * pRule;
+  char8 rule_Public[3] =
+                       {"AES     ",
+                        "PKOAEP2 ",
+                        "SHA-256 "};
+  char8 rule_Export[2] =
+                       {"AES     ",
+                        "AESKW   "};
+
+  char8 rule_Data_PKI[3] =
+                          {"AES     ",
+                           "PKCSOAEP",
+                           "SHA-256 "};
+ do64(KEK,pKek );
+ if (AESFixed > 0    )
+ {
+   if (isRSA(Tout))
+   {
+      rule_count                 =  3;
+      pRule = & rule_Data_PKI[0][0];
+      printf("RSA &AES  Rule: %24.24s\n",pRule);
+   }
+   else
+   {
+    printf("Key of type DATA and KEK (AES)EXPORTER not supported\n" );
+    return 8;
+   }
+ }
+ else
+ if (isRSA(Tout))
+ {
+    rule_count                 =  3;
+    pRule = &rule_Public[0][0];
+    printf("RSA ^AES:Rule:%48.48s\n",pRule);
+ }
+ else
+ //                    we have exporter
+ {
+    printf("Using export key %s\n",pKek    );
+    rule_count                 =  2;
+    pRule = &rule_Export[0][0];
+    printf("Exporter Rule: %16.16s\n",pRule);
+ }
+  int lOut = 900;
+  char * pOut;
+  pOut = (char * ) malloc(lOut);
+  if ( pOut == 0)
+  {
+     printf("doexpaes: malloc failed\n");
+     return 8 ;
+  }
+//printf("Source Key:%s.\n",pKey );
+//printf("KEK:%64.64s.\n",KEK);
+
+  CSNDSYX (
+             &rc,                /* return code            */
+             &rs ,               /* reason code            */
+             &zero,              /* exit data length       */
+             0    ,              /* exit data[]            */
+             &rule_count,        /* rule array count       */
+             pRule,              /* rule array[]           */
+             &i64   ,            /* source key    length,  */
+  (char *)   &Key64,             /* source key             */
+             &i64,               /* RSA public key length  */
+  (char *)   &KEK,               /* RSA public key token   */
+             &lOut,              /* exported key length    */
+             pOut           );   /* exported key           */
+  if( rc > 0)
+  {
+    printf("ExpAESK:CSNDSYX rc %i rs %i %s\n",rc,rs,csfgetrc(rs));
+ // printf("ExpAES:Rule:%i %*.*s\n",rule_count,
+ //         rule_count*8,rule_count*8,pRule);
+  }
+  if (rc != 0) return rc;
+  printf("Length of data in %i out %i \n",i64,lOut);
+  *pData = pOut;
+  * lData = lOut;
+  return 0;
+ }
+ #endif

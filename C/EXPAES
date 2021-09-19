@@ -39,7 +39,7 @@ int main( int argc, char *argv??(??))
   rc =exportAES (pKey,pKek,&pData, &lData);
   if (rc > 0 ) return rc;
   rc = writeKey(dd,pData,lData);
-  printHex(stdout,pData,16);
+//printHex(stdout,pData,16);
   if (rc > 0 ) return rc;
   printf("export of %s successful\n",pKey);
  return rc;

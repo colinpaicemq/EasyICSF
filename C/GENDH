@@ -12,7 +12,7 @@ typedef char    char8[8];
 #include <addckds.h>  // colin special
 #include <SKELAES.h> // colin special
 #include <exists.h>  // colin special
-#include <keydh  .h>  // colin special
+#include <GENDH  .h>  // colin special
 int main( int argc, char *argv??(??))
 {
   char * pKey   = "";
