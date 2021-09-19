@@ -172,6 +172,27 @@ This generates a 2 part key. It creates a local key in pLocal, and the external 
 ### keyType
 [keyType (pData,lData, &output,&lOutput)](CHelpers/KEYTYPE)
 Pass in a blob, and return a string descriptor.
+For example
+```
+    INTERNAL PKA      ECCPRIV  BP512   
+```
+Which says
+
+- This key is encrypted with the local(Master) key
+- It is a PKI key
+- It is an ECC Private key
+- It is of type Brain Pool with key length 512
+
+and
+```
+    INTERNAL SYMMETRI EXPORTER CANAES      
+```    
+Which says
+
+- This key is encrypted with the local(Master) key
+- It is an AES (Symmetric)key
+- It is an Exporter key
+- It can be used for AES processing.
 
 ### read
 [read(dd,&pData,&lData)](CHelpers/READ)
