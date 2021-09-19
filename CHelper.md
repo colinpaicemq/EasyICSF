@@ -78,17 +78,17 @@ Removes the record from the CKDS.  This uses CSNBKRD.
 Removes the record from the CKDS.  This uses CSNDKRD.
 
 ### existsP
-[existsP(pName)] (CHelpers/EXISTS)
+[existsP(pName)](CHelpers/EXISTS)
 Check the key name exists in the PKDS exists using CSNDKRR.
 This reads the PKDS keystore to see if the record exists.
 
 ### existsC
-[existsC(pName)] (CHelpers/EXISTS)
+[existsC(pName)](CHelpers/EXISTS)
 Check the key name exists in the CKDS exists using CSNBKRR2
 This reads the CKDS keystore to see if the record exists.
 
 ### findKey
-[findKey(type,pKey, &pData,&lData)]((CHelpers/FINDKEY)
+[findKey(type,pKey, &pData,&lData)](CHelpers/FINDKEY)
 Return the key from the CKDS or PKDS.  If type is 
 
 - "P" look only in the PKDS
