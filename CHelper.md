@@ -60,17 +60,21 @@ Pass in the key name, the encrypted key, and whether to replace or not if it alr
 It uses CSNBKRC2 to add the record, if the record exists, and pReplace = Y then use deleteCKDS to delete it, and retry the add.
 
  
-### addPKDS(pKey,pToken,lToken,pReplace) {#addPKDS}
+### addPKDS(pKey,pToken,lToken,pReplace) 
+[addPKDS(pKey,pToken,lToken,pReplace) ](Chelpers/ADDPKDS)
 Pass in the key name, the encrypted key, and whether to replace or not.
 It uses CSNDKRC to add the record, if the record exists, and pReplace = Y then use deletePKDS to delete it, and retry the add.
 
-### csfgetrc(return code,reason) {csfgetrc}
+### csfgetrc 
+[csfgetrc(return code,reason)](CHelpers/CSFGETRC)
 Takes the reason code, and returns a string describing the reason code(for this problems I experienced).
 
-### deleteCKDS(pKey) {deleteCKDS}
+### deleteCKDS
+[deleteCKDS(pKey)]((CHelpers/DELCKDS)
 Removes the record from the CKDS.  This uses CSNBKRD.
 
-### deletePKDS(pKey) {deletePKDS}
+### deletePKDS
+[deletePKDS(pKey)](CHelpers/DELPKDS)
 Removes the record from the CKDS.  This uses CSNDKRD.
 
 ### existsP(pName) {existP}
