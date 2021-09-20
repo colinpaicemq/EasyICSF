@@ -48,10 +48,10 @@ int main( int argc, char *argv??(??))
      ) pReplace = "Y";
   else pReplace = "N";
 
-  if ( pKey[0] == ' ') {rc++;printf("-key ...  is required\n");}
-  if ( pKey2[0] == ' ') {rc++;printf("-key2 ...  is required\n");}
-  if ( pPublic[0] == ' ') {rc++;printf("-public ... is required\n");}
-  if ( pPrivate[0]== ' ') {rc++;printf("-private ... is required\n");}
+  if ( pKey[0] == 0 ) {rc++;printf("-key ...  is required\n");}
+  if ( pKey2[0] == 0 ) {rc++;printf("-key2 ...  is required\n");}
+  if ( pPublic[0] == 0 ) {rc++;printf("-public ... is required\n");}
+  if ( pPrivate[0]== 0 ) {rc++;printf("-private ... is required\n");}
   if ( rc > 0) return rc;
 
 

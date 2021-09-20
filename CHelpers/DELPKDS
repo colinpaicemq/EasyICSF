@@ -26,7 +26,7 @@ int deletePKDS(char * label )
       rc = 0;                 // is ok
 //if (rc != 0 )
   {
-    printf("delete PKDS %s CSNDKRD rc %i rs %i\n",label,rc,rs);
+    printf("  delete PKDS %s CSNDKRD rc %i rs %i\n",label,rc,rs);
   }
   return rc;
 }

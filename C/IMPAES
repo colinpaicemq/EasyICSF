@@ -63,6 +63,11 @@ int main( int argc, char *argv??(??))
   if ( rc != 0) return 8;
 //printHex(stdout,pData,lData);
 
+ char out[60];
+ int lOut = sizeof(out);
+ rc = keyType(pData   ,lData    ,&out[0],&lOut);
+ if (rc == 0)
+   printf("Imported key:%s\n",out);
   rc = addCKDS(pKey,pData,lData,pReplace);
   if ( rc != 0 ) return rc;
   return 0;

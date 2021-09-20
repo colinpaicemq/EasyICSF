@@ -27,8 +27,8 @@ int main( int argc, char *argv??(??))
      printf("Problem with parameters %i\n",rc);
      return 8;
   }
-  if ( pKey[0] == ' ') {rc++;printf("-key ...  is required\n");}
-  if ( dd[0] == ' ')    {rc++;printf("-dd  ... is required\n");}
+  if ( pKey[0] == 0  ) {rc++;printf("-key ...  is required\n");}
+  if ( dd[0] == 0  )    {rc++;printf("-dd  ... is required\n");}
   if ( rc > 0) return rc;
 
   rc = exportpki(pKey, &pExt, &lExt);

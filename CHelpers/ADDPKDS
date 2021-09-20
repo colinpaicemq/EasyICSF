@@ -38,13 +38,16 @@ int addPKDS(char * key, char * pData, int lData, char * pDelete)
 {
   int rc;
   int i;
-  printf("replace %1.1s.\n",pDelete);
+  printf("addPKDS\n");
   for( i = 0; i<2; i++ )  // go round twice once with delete
   {
      rc = addPKDS1(key,pData,lData);
      if (rc == 0) break;
      if (rc == RECORD_EXISTS && pDelete[0]=='Y')
+     {
+       printf("  Record existed, and REPLACE=Y specified\n");
        rc = deletePKDS(key);
+     }
      if (rc != 0) break;
   }
   if (rc == 0)

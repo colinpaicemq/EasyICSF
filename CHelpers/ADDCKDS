@@ -25,7 +25,7 @@ int addCKDS1(char * key, char * pData, int lData)
               pData        );/* key token[]                   */
   if ( rc > 0)
     {
-      printf("addCKDS CSNBKRC2 add %s CKDS %i rs %i %s\n",key,
+      printf("  addCKDS CSNBKRC2 add %s CKDS %i rs %i %s\n",key,
            rc,rs,csfgetrc(rs));
     }
    if (rs == RECORD_EXISTS) return rs;
@@ -36,16 +36,20 @@ int addCKDS(char * key, char * pData, int lData, char * pDelete)
 {
   int rc;
   int i;
+  printf("addCKDS\n");
   for( i = 0; i<2; i++ )  // go round twice once with delete
   {
      rc = addCKDS1(key, pData,lData);
      if (rc == 0) break;
      if (rc == RECORD_EXISTS && pDelete[0]=='Y')
+     {
+       printf("  Record existed and REPLACE=Y specified\n");
        rc = deleteCKDS(key);
+     }
      if (rc != 0) break;
   }
    if (rc == 0)
-   printf("addPKDS %s successful\n",key);
+   printf("addCKDS %s successful\n",key);
   return rc;
 }
 

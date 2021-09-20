@@ -6,7 +6,8 @@ int GENDH(
   char * pPublic,
 // output
   char **  pData,
-  int  * lData)
+  int  * lData,
+  char * pInParty) // randomiser string
 {
 //  printHex(stdout,*pData,64);
   do64(public,pPublic);
@@ -23,14 +24,14 @@ int GENDH(
   char * pRule = & rule[0][0];
   int keyLength = 256 ;//  AES 256  - why use any other?
 
-//char *pkeyType1 = "TOKEN   ";
-//char *pkeyType2 = "        ";
 
   int i64 = 64;
-//int l = * lData;
-//l = 900;
-  char * pParty = "transaction-id";
+  char * pParty;
+  pParty = pInParty;
+  if (strlen(pParty) == 0)
+     pParty = "cOlins_seed";
   int lParty = strlen(pParty);
+
   // the token coming in can be short (eg 56 bytes)
   // but it generates up to 900 bytes
   // so we we have to allocate a new buffer,big enough
@@ -40,7 +41,7 @@ int GENDH(
   pOutput = (char *) malloc(lOutput);
   if ( pOutput == 0)
   {
-     printf("CSNDEDH malloc failed\n");
+     printf("GENDH:CSNDEDH malloc failed\n");
      return 8;
   }
   memcpy(pOutput,*pData,*lData);
@@ -91,7 +92,7 @@ int GENDH(
     return rc;
   }
   free(*pData);
-  *pData = pOutput;
+  * pData = pOutput;
   * lData = lOutput;
   return rc;
 }

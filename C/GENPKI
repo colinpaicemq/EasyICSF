@@ -25,7 +25,7 @@ int main( int argc, char *argv??(??))
      printf("Problem with parameters %i\n",rc);
      return 8;
   }
-  if ( pKey[0] == ' ') {rc++;printf("-key ...  is required\n");}
+  if ( pKey[0] == 0  ) {rc++;printf("-key ...  is required\n");}
   if ( rc > 0) return rc;
 
   if ( strlen(pReplace) > 0  &&

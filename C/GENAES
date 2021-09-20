@@ -36,7 +36,7 @@ int main( int argc, char *argv??(??))
   {
      rc++;printf("-key ...  is required\n");
   };
-  if ( pType[0] == ' ') {rc++;printf("-type E|I|C  is required\n");}
+  if ( pType[0] == 0  {rc++;printf("-type E|I|C  is required\n");}
   if ( rc > 0) return rc;
   // optional
   if ( strlen(pReplace) > 0  &&

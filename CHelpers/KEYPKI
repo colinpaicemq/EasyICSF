@@ -13,7 +13,7 @@ int GENPKIGEN(
   pOutput = (char * ) malloc(lOutput);
   char nullTransportKey[64];
   memset(&nullTransportKey[0],0,64);
-  // key type AES and used for OP (on this system
+  //?key type AES and used for OP (on this system
   int rule_count                 =  1;
   char8 rule[2]  = {"MASTER  " };
   //               ,"KEY-AES "};
@@ -37,14 +37,14 @@ int GENPKIGEN(
          &ll,                      // length of skeleton
          *pData,                   // the skeleton
 
-          &nullTransportKey[0],    /*                       */
+         &nullTransportKey[0],    /*                       */
 
-          &lOutput,
-          pOutput
+         &lOutput,
+         pOutput
   );           /* output key id2[]      !  */
-  if ( rc > 0)
+//if ( rc > 0)
   {
-    printf("KEYPKI CSNDPKG rc %i rs %i %s\n",
+    printf("KEYPKI:CSNDPKG rc %i rs %i %s\n",
     rc,rs,csfgetrc(rs));
     return rc;
   }

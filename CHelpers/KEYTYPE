@@ -105,10 +105,10 @@ int keyType(char * pIn  , int lIn,
   char  output[60];
   output[0]=0;// say it is a null string
   memset(&output[0],0  ,sizeof(output));  // preset to nulls
-//output[sizeof(output)-1]=0; // null terminator
-//printHex(stdout,pIn,lIn);
-// printf("Keytype:\n");
-//printHex(stdout,pIn,16 );
+  //output[sizeof(output)-1]=0; // null terminator
+  //printHex(stdout,pIn,lIn);
+  // printf("Keytype:\n");
+  //printHex(stdout,pIn,16 );
   //
   if ( pIn[0] == 0x00                   )
   {
