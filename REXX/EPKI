@@ -14,7 +14,7 @@ end
 rc = EXPPKI(key)
 parse var rc myrc myrs Key
 say myrc myrs
-if myrc <> 0 then return rc
+if myrc <> 0 then return myrc
 out.0 = 1
 out.1 = X2C(Key) /* in binary */
 "EXECIO * DISKW EXPORT (STEM out. OPEN FINIS"

@@ -25,9 +25,8 @@ Other members of the C source PDS.
         - -key name
         - -public pki public key
         - -dd  output data set,for example _-dd dd:CERT_, where //CERT is in the JCL
-        - -type Data |Cipher
+        
     - It uses helper functions:
-        -    doExists("P",pPublic) to check the public key is available.
         -    exportAES(pKey,pPublic,pType,&pData, &lData) to extract the key into pData, where the data is encrypted with the public key.
         -    writeKey(dd,pData,lData);  to write to the data set.
     - The matching function is IMPAES to import the certificate from a file to the key store.     

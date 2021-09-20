@@ -31,8 +31,8 @@ return x  cprs(myrc,myrs)
 /* add it */
 /* --------------------------------------------------------------- */
 addit:
-rc = 'FFFFFFFF'x
-rs = 'FFFFFFFF'x
+myrc = 'FFFFFFFF'x
+myrs = 'FFFFFFFF'x
 exit_length = '00000000'x
 exit_data = ''
 rule_count = '00000000'x

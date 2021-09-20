@@ -9,6 +9,7 @@
 // SET IM='-kek RSA2   '
 // SET IM='-kek PKDS2  '
 // SET IM='-kek RSA4096'
+// SET IM='-kek AESDHI  '
 //ISTEST   EXEC PGM=IMPAES,REGION=0M,
 // PARM='&KEY.  -replace Y &IM.  -dd dd:CERT '
 //STEPLIB  DD DISP=SHR,DSN=COLIN.LOAD

@@ -37,4 +37,4 @@ IF (RC <> 0 )          Then
   END
 
 lData = c2d(lToken)
-RETURN myrc  c2x(substr(Token,1,lData))
+RETURN myrc myrs  c2x(substr(Token,1,lData))

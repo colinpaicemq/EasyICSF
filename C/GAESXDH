@@ -62,7 +62,7 @@ int main( int argc, char *argv??(??))
   rc = findKey("P",pPrivate,&pKekData,&lKekData);
   if (rc != 0)
   {
-    printf("private key not found %s\n",pPrivate);
+    printf("GAESXDH:private key not found %s\n",pPrivate);
     return rc;
     }
   rc = keyType(pKekData,lKekData ,&privOut[0],&lPrivOut);

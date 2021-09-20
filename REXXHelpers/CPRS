@@ -2,6 +2,8 @@
 parse arg rc,rs
 v.= "Not listed" rs
 v.0  ="OK"
+v.47 ="A source key token is unusable because it contains"||,
+          " data that is not valid or undefined."
 v.155="The value that the generated_key_identifier parameter"||,
       "  specifies is not valid"
 v.762="The key values structure for CSNDPKB has a field in error"||,
@@ -9,7 +11,8 @@ v.762="The key values structure for CSNDPKB has a field in error"||,
 v.2012="The rule_array_count parameter contains a" ||,
            " number that is not valid."
 v.2016="The rule_array parameter contents are incorrect"
-v.2040="Wrong key type internal/external"
+v.2040="Wrong key type internal/external.  Could be using RSA when"||,
+       " AES importer expected"
 v.2054="RSA:OAEP optional encoding parameters failed validation"
 v.2055="The RSA public key is too small to encrypt the DES key"
 v.2089="The algorithm does not match the algorithm"||,
@@ -18,6 +21,8 @@ v.2141="A key verification pattern failed to verify"||,
        "Check importer|exporter key"
 v.2154="At least one key token passed to this callable service "||,
        "does not have the required key type for the specified function"
+v.2159="One or more key-encrypting key passed to the service"||,
+       " is not valid for the service."
 v.3529="A key identifier was supplied to a callable service as a key"||,
        "token or thee label of a key token in a key data set. "||,
         " Perhaps the label does not exist"

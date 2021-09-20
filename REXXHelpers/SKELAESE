@@ -15,8 +15,10 @@ exit_length =  d2c(0,4);
 exit_data = ''
 rule_count = d2c(3,4)
 if type = 'I' then
+  rule_array = 'INTERNAL'||'AES     '||'IMPORTER'
+/*
   rule_array = 'INTERNAL'||'AES     '||'IMPORTER'||'ANY-MODE'||'XPRTCPAC'
-
+*/
 else,
 if type = 'E' then
   rule_array = 'INTERNAL'||'AES     '||'EXPORTER'

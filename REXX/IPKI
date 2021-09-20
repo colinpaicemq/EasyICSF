@@ -8,7 +8,6 @@ parse upper arg args
 if ( wordpos("-REPLACE",args) > 0) then replace="Y"
 else replace="NO"
 
-trace e
 if ( key   =  "") then
 do
    say "syntax is  -KEY key   -replace          "
@@ -19,6 +18,12 @@ if ( rc <> 0) then
 do
  say "Return code from EXECIO read to //IMPORT "rc
  return rc;
+end
+
+if ( in.0 = 0) then
+do
+  say "unexpected file.  No record found    "
+  return 8
 end
 if ( in.0 > 1) then
 do
