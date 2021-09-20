@@ -47,11 +47,12 @@ This generates an Exporter, Importer or Cipher key using Diffi-Hellman.  It uses
          - -key name
          - <-replace Y|N> If the key exists and Y is specified, then the old key is deleted and the new one added
          - -type E|I|C for key type to generate
-         - -private the name of the private key in the PKDS 
-         - -public the name of the public key in the PKDS.
+         - -private name,  the name of the private key in the PKDS 
+         - -public name, the name of the public key in the PKDS.
+         - -party string, the common secret between the two systems.
      -  It uses helper functions
          -  skeletonAES(pType,&pData, &lData) passing the type of key to generate and gets back the skeleton key.
-         -  GENDH(pPrivate, pPublic,& pData,& lData) passing the name of the private key, the name of the public key, and the data from the skeletonAES.
+         -  GENDH(pPrivate, pPublic,& pData,& lData,pParty) passing the name of the private key, the name of the public key, and the data from the skeletonAES.
          -  addCKDS(pKey,pData,lData,pReplace) passing the key name to add to the CKDS, the key ( with length) and whether to replace it if it already exists.
 
 
@@ -95,11 +96,12 @@ This allows you tohave the same AES key on two systems without sending sensitive
         - -public name, the public key of the remote end
         - -private name, the private key of the local end
         - < -replace Y|N > If the key exists and Y is specified, then the old key is deleted and the new one added
+        - -party string, the common secret between the two systems.
      - It uses helper functions
         -  doExists("P",pPrivate) to check the private key exists
         -  doExists("P",pPublic) to check the public key exists
         -  skeletonAES(& pToken,& lToken) which returns a skeleton in pToken
-        -  GENDH(pPrivate, pPublic,& pData,& lData);  to take the skeleton, private and public and return the encrypted key
+        -  GENDH(pPrivate, pPublic,& pData,& lData,pParty);  to take the skeleton, private and public and return the encrypted key
         -  addCKDS(pKey,pToken,lToken,pReplace) to pass in the key name, the encrypted key, and whether to replace or not
 
 #### GENPKI generates a PKI private and public pair of keys. {#GENPKI}

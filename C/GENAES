@@ -18,7 +18,7 @@ int keyGenerate2(char *,   int *);
 // int skeletonAES(char **, int *);
 int main( int argc, char *argv??(??))
 {
-  printf("Compiled %s %s.\n", __DATE__, __TIME__);
+//printf("Compiled %s %s.\n", __DATE__, __TIME__);
 
   char * pKey   = "";
   char * pReplace = "";
@@ -36,7 +36,7 @@ int main( int argc, char *argv??(??))
   {
      rc++;printf("-key ...  is required\n");
   };
-  if ( pType[0] == 0  {rc++;printf("-type E|I|C  is required\n");}
+  if ( pType[0] == 0) {rc++;printf("-type E|I|C  is required\n");}
   if ( rc > 0) return rc;
   // optional
   if ( strlen(pReplace) > 0  &&
@@ -57,6 +57,6 @@ int main( int argc, char *argv??(??))
 
     rc = addCKDS(pKey,pToken       ,lToken,pReplace);
     if ( rc != 0 ) return rc;
-    printf("GENAES %s successful\n",pKey);
+    printf("GENAES:%s successful\n",pKey);
     return rc;
 }

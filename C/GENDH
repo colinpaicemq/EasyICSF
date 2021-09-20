@@ -69,6 +69,6 @@ int main( int argc, char *argv??(??))
   rc = addCKDS(pKey,pData,lData,pReplace);
   if (rc != 0) return rc;
   else
-  printf("Added %s successfully\n",pKey);
+  printf("GENDH:Added %s successfully\n",pKey);
    return rc;
 }

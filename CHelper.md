@@ -137,8 +137,9 @@ Take the skeleton and return the encrypted key. This is in member KEYAES.
  It uses CSNBKGN2 with keyType1 = "TOKEN   " to say skeleton is passed in.
  
 ### GENDH
-[GENDH(pPrivate, pPublic,& pData,& lData)](CHelpers/GENH)
-Take the private name, public key name, and the skeleton and return the encrypted key. This is in member keyDH.
+[GENDH(pPrivate, pPublic,& pData,& lData,pParty)](CHelpers/GENH)
+Take the private name, public key name, and the skeleton and return the encrypted key. The skeleton is created member keyDH.
+pParty is a string to use as a randomiser, known as a party secret.
  Uses CSNDEDH( with
 
 - rule =  = {"DERIV01 " ,"KEY-AES "}
