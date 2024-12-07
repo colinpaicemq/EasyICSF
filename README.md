@@ -248,8 +248,7 @@ The parameters are
 The syntax is 
 
 ```
--key value  < -start yyyymmdd > <-end yyyymmdd >
--archive on|off  > < -probibit on|off >
+-key value  < -start yyyymmdd > < -end yyyymmdd > < -archive on|off  > < -probibit on|off >
 ```
 
 where
@@ -264,10 +263,10 @@ where
 : where yyyymmdd is the end of the validity date range
 
 -archive on|off 
-: you can set (archive)[https://www.ibm.com/docs/en/zos/3.1.0?topic=ckds-archiving-record-in-kdsr-format] on or off
+: you can set [archive](https://www.ibm.com/docs/en/zos/3.1.0?topic=ckds-archiving-record-in-kdsr-format) on or off
 
 -probibit on|off
-: you can set (prohibit archive)[https://www.ibm.com/docs/en/zos/3.1.0?topic=ckds-prohibiting-archival-record-in-kdsr-format] on or off.
+: you can set [prohibit archive](https://www.ibm.com/docs/en/zos/3.1.0?topic=ckds-prohibiting-archival-record-in-kdsr-format) on or off.
 
 
 ## Generate a secure shared key on multiple systems using Diffie-Hellman 
