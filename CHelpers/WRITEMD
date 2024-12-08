@@ -1,0 +1,88 @@
+// write meta data
+#ifndef WRITEMD_INCLUDE
+#define WRITEMD_INCLUDE
+/**************************************************************
+ MIT License
+ Copyright (c) 2024 Colin Paice
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+ The above copyright notice and this permission notice shall be included in all
+ copies or substantial portions of the Software.
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
+ * Contributors:
+ *   Colin Paice - Initial Contribution
+ ************************************************************/
+// write meta data
+#include <do64.h>
+typedef char    char8[8];
+int writeMD(char * pKey, char * pData, int lData)
+{
+/////////////////////
+  int rule_count = 1;
+  int rc = 0;
+  int rs = 0;
+  int zero = 0;
+  char * pRule;
+  char8 rule[1]   = {"CKDS    "};
+  if ( debug > 0)
+  {
+     printf("Input label %s\n",pKey);
+     printf("Update data\n");
+     printHex(stdout,pData,lData);
+  }
+  pRule =   &rule[0][0];
+  do64(label,pKey);
+  char ckdsLabel[72];
+  memset(&ckdsLabel[0],' ',sizeof(ckdsLabel));
+  memcpy(&ckdsLabel[0],&label[0],64); // the padded label
+  if (debug > 0)
+  {
+     printf("Key:%s\n",ckdsLabel[0]);
+  }
+  int rcCodes[2];
+  rcCodes[0]=0;
+  rcCodes[1]=0;
+  int nLabel = 1;
+//short s ;
+//memcpy(&s,pData,2);
+//int lData = s;
+  CSFKDMW(
+          &rc,               /* return code                   */
+          &rs,               /* reason code                   */
+          &zero,             /* exit data length              */
+          0,                 /* exit data[]                   */
+
+          &rule_count,       /* rule array count              */
+          pRule,             /* rule array[]                  */
+   // now the non standard ones
+          &nLabel,           /* key value bit length          */
+          &ckdsLabel[0],     /* key value structure len       */
+          &lData ,           /* length meta data              */
+          pData ,            /* metadata value                */
+  (char *)&rcCodes[0],       /* user def rcodes               */
+          &zero,             /*  res 1                        */
+          0,                 /*                               */
+          0,                 /*  res 2                        */
+//        &zero,             /*  res 2                        */
+          0           );     /* target key token[]            */
+   if ( rc != 0 )
+   {
+   printf("rc %i rs %i %s\n",rc,rs,csfgetrc(rs));
+   if (rcCodes[1] != 0)
+       printf("   label rc %i rs %i %s\n",rcCodes[0],rcCodes[1],
+               csfgetrc(rcCodes[1]));
+
+   }
+  return rc;
+}
+#endif

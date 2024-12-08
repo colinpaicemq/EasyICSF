@@ -1,32 +1,60 @@
+// add an entry to the CKDS
 #ifndef ADDCKDS_INCLUDE
 #define ADDCKDS_INCLUDE
+/**************************************************************
+ MIT License
+ Copyright (c) 2024 Colin Paice
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+ The above copyright notice and this permission notice shall be included in all
+ copies or substantial portions of the Software.
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
+ * Contributors:
+ *   Colin Paice - Initial Contribution
+ ************************************************************/
 #include <delCKDS.h>
 #include <do64.h>  // colin special
 /* --------------------------------------------------------------- */
 /* Add a record to the keystore - if it exist already replace it   */
 /* --------------------------------------------------------------- */
 #define RECORD_EXISTS 16036
-
 int addCKDS1(char * key, char * pData, int lData)
 {
   int rc;
   int rs;
   int zero = 0;
   do64(Key,key);
-    rc= CSNBKRC2(
+  rc= CSNBKRC2(
                &rc  ,                   /* return code              */
                &rs,                     /* reason code              */
-               &zero,                   /* exit data length         */
+               0, //  &zero,            /* exit data length         */
                0,                       /* exit data[]              */
-               &zero,                   /* rule array count         */
+               0, //  &zero,            /* rule array count         */
                0,                       /* rule array[]             */
-    (char *)  &Key,                     /* key key[64]               */
+              &Key[0],                  /* key key[64]               */
               &lData,                   /* key token length   */
               pData        );/* key token[]                   */
+  strip64(tKey,Key);
+//printf("ADDCKDS %64.64s. length %i\n",&Key[0],lData);
+  printf("ADDCKDS label %s.  Token length %i\n",tKey,lData);
   if ( rc > 0)
     {
-      printf("  addCKDS CSNBKRC2 add %s CKDS %i rs %i %s\n",key,
+      printf("addCKDS CSNBKRC2 add %s to CKDS rc %i rs %i %s\n",tKey,
            rc,rs,csfgetrc(rs));
+      if ( rs == 2040|| debug > 0 ) // bad data
+      {
+        printf("Key %64.64s\n",Key[0]);
+      }
     }
    if (rs == RECORD_EXISTS) return rs;
 
@@ -36,7 +64,6 @@ int addCKDS(char * key, char * pData, int lData, char * pDelete)
 {
   int rc;
   int i;
-  printf("addCKDS\n");
   for( i = 0; i<2; i++ )  // go round twice once with delete
   {
      rc = addCKDS1(key, pData,lData);
@@ -48,8 +75,8 @@ int addCKDS(char * key, char * pData, int lData, char * pDelete)
      }
      if (rc != 0) break;
   }
-   if (rc == 0)
-   printf("addCKDS %s successful\n",key);
+// if (rc == 0)
+//   printf("addCKDS %64.64s successful\n",key);
   return rc;
 }
 

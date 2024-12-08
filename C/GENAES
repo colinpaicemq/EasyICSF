@@ -1,62 +1,291 @@
+// generate a symmetric key
+/**************************************************************
+MIT License
+Copyright (c) 2024 Colin Paice
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+* Contributors:
+*   Colin Paice - Initial Contribution
+************************************************************/
+#pragma comment(user,"Copyright Colin Paice 2024")
 // generate a CIPHER key
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <string.h>
 #include </usr/include/csfbext.h>
+#include <errno.h>
 typedef char    char8[8];
+int debug = 0;
+unsigned int * pHex = 0;
+char * pKeyname = "";
 #include <csfgetrc.h>  // colin special
 #include <exists.h>  // colin special
 #include <printhx.h>  // colin special
 #include <addckds.h>  // colin special
 #include <args2.h>  // colin special
 #include <do64.h>  // colin special
-#include <printAES.h>  // colin special
+#include <keytype.h>    // colin special
 #include <skelaes.h>  // colin special
-#include <keyaes.h>  // colin special
-int keyGenerate2(char *,   int *);
-// int skeletonAES(char **, int *);
-int main( int argc, char *argv??(??))
+#include <genaesie.h>  // colin special
+#include <findkey.h>    // colin special
+#include <writekey.h>  // colin special
+#include <hex2int.h>   // hex string to internal hex
+#include <parserul.h>   // hex string to internal hex
+int main ( int argc, char *argv??(??))
 {
 //printf("Compiled %s %s.\n", __DATE__, __TIME__);
-
-  char * pKey   = "";
+  char * pKey = "";
+  char * pKek   = "";
+  // pointe to the rule for generate api - eg OPEX
+  char * pOPRule;
   char * pReplace = "";
   char * pType = "";
+  char * pHexKey = "";
+  int lHexKey = 0;
+  char * pUserData =  "";
+  // point to the rules we pass to the skeleton
+  char * pRule1 ="";
+  char * pRule2 = "";
+
+  char * pDebug = "";
+  char * dd     = "dd:AES";
   int rc = 0;
+  keyTYPE ktKEK;
+  FILE * pF = stdout; // default output file
+  // the input to, and output from the skeleton is stored in the following
+  int  lToken1 = lCKDSRecord; //standard constant
+  char token1[lToken1];
+  char * pToken1 = &token1[0];
+  int  lToken2 = lCKDSRecord;
+  char token2[lToken2];
+  char * pToken2 = &token2[0];
+
+  unsigned int h[4];            // where user hex key value is stored
+  /////////////////////////
+  // process the parameters
+  /////////////////////////
   rc += readArgs( argc,argv,"-key",0,&pKey,"v");
   rc += readArgs( argc,argv,"-replace",0,&pReplace,"v");
   rc += readArgs( argc,argv,"-type",0 ,&pType,"v");
+  rc += readArgs( argc,argv,"-kek",0 ,&pKek,"v");
+  rc += readArgs( argc,argv,"-dd"    ,0 ,&dd    ,"v");
+  rc += readArgs( argc,argv,"-userdata" ,0 ,&pUserData,"v");
+  rc += readArgs( argc,argv,"-hexkey" ,0 ,&pHexKey,"v");
+  rc += readArgs( argc,argv,"-keyname",0 ,&pKeyname,"v");
+  rc += readArgs( argc,argv,"-rule1" ,0 ,&pRule1,"v");
+//rc += readArgs( argc,argv,"-rule2" ,0 ,&pRule2,"v");
+  rc += readArgs( argc,argv,"-debug",0 ,&pDebug,"v");
+
+  if (strlen(pDebug) > 0)
+  {
+      debug = atoi(pDebug);
+      printf("debug set %i\n",debug);
+  }
   if (rc > 0 )
   {
      printf("Problem with parameters %i\n",rc);
      return 8;
   }
-  if ( pKey[0] == 0)
+
+  int lRule = 81;
+  char rule[lRule];
+  if (strlen(pRule1) > 0 )
   {
-     rc++;printf("-key ...  is required\n");
-  };
-  if ( pType[0] == 0) {rc++;printf("-type E|I|C  is required\n");}
-  if ( rc > 0) return rc;
-  // optional
+   rc = parseRules(pRule1,&rule[0],lRule);
+   printf("parseRules rc = %i %s.\n",rc,&rule[0]);
+
+   return 8;
+  }
   if ( strlen(pReplace) > 0  &&
        ( pReplace[0]=='y'  ||  pReplace[0]=='Y')
      ) pReplace = "Y";
   else pReplace = "N";
 
-   char * pToken;
-   int  lToken;
+  // check the key label was specified
+  if ( pKey[0] == 0)
+  {
+     rc++;printf("-key ...  is required\n");
+  };
 
-   // build the skeleton
-   rc = skeletonAES(pType,& pToken,& lToken);
-   if ( rc != 0 ) return rc;
-   // input the skeleton
-   // output the token
-   rc = GENAES2(pType,pToken,&lToken);
-    if ( rc != 0 ) return rc;
+  // check the type  cipher, cipher/cipher, exporter/importer
+  int lType = strlen(pType);
+  //  a kek is needed for type cipher/cipher, exporter/importer
+  if (lType == 2  && strlen(pKek) == 0)
+  {
+      printf("-kek is required \n");
+      return 8;
+  }
+  // it is not used just for one local cipher
+  if (lType == 1  && strlen(pKek) >  0)
+  {
+      printf("-kek is ignored  \n");
+  }
 
-    rc = addCKDS(pKey,pToken       ,lToken,pReplace);
-    if ( rc != 0 ) return rc;
-    printf("GENAES:%s successful\n",pKey);
-    return rc;
+  // the KEK needs to be the right type
+  if (strlen(pKek) > 0  && strlen(pType) == 2 )
+  {
+    // check it exists
+    ktKEK.i    = 0;
+    ktKEK = getKey("C",pKek,"","",stdout);
+    if (ktKEK.b.ERROR == 1)
+    {
+        return 8;
+    }
+    // for cc it needs to be an importer
+    if (strcmp(pType,"cc") == 0  && ktKEK.b.IMPORTER == 0)
+    {
+       printf(" -type cc needs an IMPORTER KEK \n");
+       return 8;
+    }
+    else
+    // for ei it needs to be an exporter
+    if (strcmp(pType,"ei") == 0  && ktKEK.b.EXPORTER == 0)
+    {
+       printf(" -type ei needs an EXPORTER KEK \n");
+       return 8;
+    }
+  }
+
+  // if they entered a hex key - convert it from string to normal
+  //  hex format.
+  lHexKey = strlen(pHexKey);
+  if (lHexKey  > 0)
+  {
+     if ( hexStringToHex(pHexKey,&h[0])  != 0)
+     {
+       printf("Problem converting -hex value %s\n",pHexKey);
+       return 8;
+     }
+     pHex = &h[0];
+     if ( debug >=8)
+       printf("Hex string %8.8x,%8.8x,%8.8x,%8.8x\n",h[0],h[1],h[2],h[3]);
+  }
+  ///////////////////  One cipher /////////////////////
+  if (strlen(pType) == 1  && pType[0] == 'c')
+  {
+    pKek = "";  // set this as we do not use it
+    if (lHexKey == 0)
+      pRule1  =  "INTERNALAES     CIPHER  XPRTCPACANY-MODE"         ;
+    else
+      pRule1  =  "INTERNALAES     CIPHER  XPRTCPACANY-MODEKEY-CLR ";
+    if (debug >0)
+       printf("pRule1 %48.48s\n",pRule1);
+
+    rc = skeletonAES(pRule1,  pToken1,&lToken1);
+    pOPRule = "AES     OP      ";
+    if ( rc != 0) return rc;
+    // we  need to set the lToken1 back to its length
+    lToken1 = lCKDSRecord;
+    lToken2 = 0;
+    pToken2 = 0;
+  }
+  else
+  ///////////////////  two cipher /////////////////////
+  if (strlen(pType) == 2  && strcmp(pType,"cc") == 0)
+  {
+    // first skeleton
+    if (lHexKey == 0)
+      pRule1 = "INTERNALAES     CIPHER  XPRTCPACANY-MODE"          ;
+    else
+      pRule1 = "INTERNALAES     CIPHER  XPRTCPACANY-MODEKEY-CLR "  ;
+      "INTERNALAES     CIPHER  XPRTCPACANY-MODE"          ;
+    if (debug >0)
+       printf("pRule1 %48.48s\n",pRule1);
+
+    rc = skeletonAES(pRule1,   pToken1,&lToken1);
+    if ( rc != 0) return rc;
+
+    // second skeleton
+    if (lHexKey == 0)
+        pRule2 = "EXTERNALAES     CIPHER  XPRTCPACANY-MODE"  ;
+    else
+        pRule2 = "EXTERNALAES     CIPHER  XPRTCPACANY-MODEKEY-CLR ";
+    if (debug >0)
+      printf("pRule2 %48.48s\n",pRule2);
+    rc = skeletonAES(pRule2,   pToken2,&lToken2);
+    if ( rc != 0) return rc;
+    // we  need to set the lToken* back to its length
+    // because we pass in the length of the buffer, not the
+    // length of the data - which is encoded with in the data
+    lToken1 = lCKDSRecord;
+    lToken2 = lCKDSRecord;
+    pOPRule = "AES     OPIM    ";
+
+  }
+  ///////////////EXPORTER IMPORTER    /////////////////
+  else
+  if (strlen(pType) == 2  && strcmp(pType,"ei") == 0)
+  {
+    // exporter
+    if (lHexKey == 0)
+        pRule1 =  "INTERNALAES     EXPORTER"          ;
+    else
+        pRule1 =  "INTERNALAES     EXPORTERKEY-CLR "  ;
+    if (debug >0)
+       printf("pRule1 %48.48s\n",pRule1);
+
+    rc = skeletonAES(pRule1,   pToken1,&lToken1);
+    if ( rc != 0) return rc;
+
+    // importer
+    if (lHexKey == 0)
+       pRule2 =  "EXTERNALAES     IMPORTER"           ;
+    else
+       pRule2 =  "EXTERNALAES     IMPORTERKEY-CLR "   ;
+    if (debug >0)
+      printf("pRule2 %48.48s\n",pRule2);
+
+    rc = skeletonAES(pRule2,   pToken2,&lToken2);
+    if ( rc != 0) return rc;
+
+    // we  need to set the lToken* back to its length
+    // because we pass in the length of the buffer, not the
+    // length of the data - which is encoded with in the data
+    lToken1 = lCKDSRecord;
+    lToken2 = lCKDSRecord;
+    pOPRule = "AES     OPEX    ";
+  }
+  else
+  {
+    printf("Unexpected type value %s\n",pType);
+    return 8;
+  }
+  ////  Common processing ////////////////////////////////////////
+  rc = GENAESIE(pOPRule,pToken1,&lToken1,
+                        pToken2 ,&lToken2,
+                        pKek);
+  if ( rc != 0 ) return rc;
+
+  // store the local or "OP" in our CKDS
+  rc = addCKDS(pKey,pToken1  ,lToken1,pReplace);
+  if ( rc != 0 ) return rc;
+
+    // display it
+  fprintf(pF,"local key after generation\n");
+  processKey(pToken1,lToken1,"","",pF);
+
+  // and write the other to the file
+  if (lToken2 > 0)
+  {
+     rc = writeKey(dd,pToken2      ,lToken2);
+     if ( rc != 0 ) return rc;
+     fprintf(pF,"remote key after generation\n");
+     processKey(pToken2,lToken2,"","",pF);
+  }
+  printf("GENAES:%s successful\n",pKey);
+  return rc;
 }

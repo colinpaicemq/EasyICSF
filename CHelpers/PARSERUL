@@ -1,6 +1,8 @@
-// delete an entry from the CKDS
-#ifndef DELETECKDS_INCLUDE
-#define DELETECKDS_INCLUDE
+// routine to parse the rules passed from an application.
+//
+// with an input string AES,ABCD,A2345678,,55  it returns
+// AES     ABCD    A234567855      .  missing out the ,,
+// and elements padded to 8 chars
 /**************************************************************
  MIT License
  Copyright (c) 2024 Colin Paice
@@ -22,36 +24,41 @@
  * Contributors:
  *   Colin Paice - Initial Contribution
  ************************************************************/
-#include <do64.h>  // colin special
-//
-//
-//
-int deleteCKDS( char * label )
+int parseRules(char * pIn, char * pOut,int lOut)
 {
-  int rc = 0;
-  int rs = 0;
-  int zero = 0;
-  int rule_count   =        1;
-  char  rule[8] = "LABEL-DL" ;
 
-  //printf("Deleting label %s.\n",label );
-  do64(Lab,label);
-  CSNBKRD (
-           &rc,                    /* return code       */
-           &rs,                    /* reason code       */
-           0, //  &zero,           /* exit data length  */
-           0,                      /* exit data[]       */
-           &rule_count,            /* rule array count  */
-           &rule[0],               /* rule array[]      */
-  (char *) &Lab             );     /* key label[64]     */
-
-  if (rc == 8 && rs == 10012)   // not found
-      rc = 0;                 // is ok
-   strip64(tKey,Lab); // strip trailing blanks from Key into tKey
-//if (rc != 0  )
-  {
-    printf("  delete %s from CKDS. CSNBKRD  rc %i rs %i\n",tKey,rc,rs);
-  }
-  return rc;
+   int rc;
+   char * pIn2 = strdup(pIn); // because strtok changes the string
+   char * pNext  = pOut;
+   char * pEnd  = pOut + lOut;
+   char * token = pIn2;
+   token = strtok(pIn2, ",");
+   do
+   {
+     if (debug > 0 )
+        printf("token: \"%s\"\n", token);
+     if (token == NULL)
+        return 0;
+     if (strlen(token) == 0 )
+     {
+        printf("Invalid string, missing valu%s\n",pIn);
+        return 8;
+     }
+     if (strlen(token) > 8)
+     {
+           printf("Invalid item, too long %s\n",token);
+           return 8;
+     }
+     if (pNext + 9 > pEnd)
+     {
+       printf("Too many parameters in options %s\n",pIn);
+       return 8;
+     }
+     memset(pNext,' ',8); // preset it to blanks
+     memcpy(pNext,token,strlen(token)); // copy but not the terminating null
+     pNext += 8; // move to the next space
+     * pNext  = 0x00;//  set a null terminator
+   }
+   while (token = strtok(NULL, ", ;"));
+   return 0;
 }
-#endif

@@ -1,0 +1,93 @@
+// export a key with a KEK
+/**************************************************************
+MIT License
+Copyright (c) 2024 Colin Paice
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+* Contributors:
+*   Colin Paice - Initial Contribution
+************************************************************/
+#pragma comment(user,"Copyright Colin Paice 2024")
+  /*Include standard libraries */
+#define _OPEN_SYS
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <string.h>
+#include </usr/include/csfbext.h>
+int debug = 0;
+//
+typedef char    char8[8];
+#include <printhx.h>  // colin special
+#include <csfgetrc.h>  // colin special
+#include <exists.h>  // colin special
+//nclude <zo64.h>  // colin special
+#include <keytype.h>  // colin special
+#include <printpka.h>  // colin special
+#include <printvar.h>  // colin special
+#include <args2.h>  // colin special
+#include <writekey.h>  // colin special
+#include <findkey.h>  // colin special
+#include <export.h>  // colin special
+int main( int argc, char *argv??(??))
+{
+
+  char * pKey   = "";
+  char * pKek    = "";
+  char * dd     = "DD:CSFKEYS";
+  int rc = 0;
+  rc += readArgs( argc,argv,"-key",0 ,&pKey,"v");
+  rc += readArgs( argc,argv,"-kek",0 ,&pKek,"v");
+//rc += readArgs( argc,argv,"-dd"    ,0 ,&dd    ,"v");
+  char * pDebug= "";
+  rc += readArgs( argc,argv,"-debug",0 ,&pDebug,"v");
+
+  if (strlen(pDebug) > 0)
+  {
+    debug = atoi(pDebug);
+    printf("debug set %i\n",debug);
+  }
+  if (rc > 0 )
+  {
+     printf("Problem with parameters %i\n",rc);
+     return 8;
+  }
+  if ( pKey[0] == 0 ) {rc++;printf("-key ...  is required\n");}
+  if ( pKek[0] == 0 ) {rc++;printf("-kek ...  is required\n");}
+//if ( dd[0] == 0  ) {rc++;printf("-dd ... is required\n");}
+  if ( rc > 0) return rc;
+
+  int   lData = 900;
+  char  exported[lData];
+  char * pData = &exported[0];
+  rc =exportKey (pKey,pKek,&exported[0], &lData);
+  if (rc > 0 )
+      return rc;
+  printf("Exported key data \n");
+  printVAR(pData+144,lData-144,"","",stdout);
+  rc = writeKey(dd,pData,lData);
+  if ( debug  > 0)
+  {
+    printf("Exported data \n");
+    printHex(stdout,pData,lData);
+  }
+  if (rc > 0 )
+     return rc;
+  printf("export of %s successful\n",pKey);
+  return rc;
+}
+

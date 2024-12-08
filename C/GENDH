@@ -1,3 +1,26 @@
+//  generate a secure key using Diffie-Hellman technique
+/**************************************************************
+MIT License
+Copyright (c) 2024 Colin Paice
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+* Contributors:
+*   Colin Paice - Initial Contribution
+************************************************************/
+#pragma comment(user,"Copyright Colin Paice 2024")
 // generate a DH Cipher key
 #include <stdio.h>
 #include <stdlib.h>
@@ -5,27 +28,68 @@
 #include <string.h>
 #include </usr/include/csfbext.h>
 typedef char    char8[8];
+int debug = 0;
+char * pHex = 0;
+#ifdef delete
+char * pKeyType1 = "";
+char * pKeyType2 = "";
+char * pKeyRule1 = "";
+char * pKeyRule2 = "";
+char * pKeyType3 = "";
+#endif
 #include <csfgetrc.h>  // colin special
 #include <printhx.h>  // colin special
+#include <keytype.h>  // colin special
+//#include <printpka.h>  // colin special
+//#include <printvar.h>  // colin special
+//nclude <findkey.h>  // colin special
 #include <do64.h>  // colin special
 #include <args2.h>  // colin special
 #include <addckds.h>  // colin special
 #include <SKELAES.h> // colin special
 #include <exists.h>  // colin special
+#include <parserul.h>  // colin special
 #include <GENDH  .h>  // colin special
-int main( int argc, char *argv??(??))
+#ifdef no
+#endif
+int main( int argc, char *argv[])
 {
-  char * pKey   = "";
-  char * pReplace = "";
-  char * pPrivate= "";
-  char * pPublic = "";
-  char * pParty  = "";
+  char * pKey      = "";
+  char * pReplace  = "";
+  char * pPrivate  = "";
+  char * pPublic   = "";
+  char * pParty    = "";
+  char * pType     = "";      // Cipher Exporter Importer
+//char8 Crule[ 5] ={
+// "INTERNAL","AES     ","CIPHER  ", "XPRTCPAC","ANY-MODE" };
+//char * pSkelRule = "";      // Rules to use
   int rc = 0;
   rc += readArgs( argc,argv,"-key",0 ,&pKey,"v");
   rc += readArgs( argc,argv,"-replace",0 ,&pReplace,"v");
   rc += readArgs( argc,argv,"-public",0 ,&pPublic,"v");
   rc += readArgs( argc,argv,"-private",0 ,&pPrivate,"v");
   rc += readArgs( argc,argv,"-party",0 ,&pParty,"v");
+  rc += readArgs( argc,argv,"-ptype",0 ,&pType ,"v");
+#ifdef delete
+  rc += readArgs( argc,argv,"-keytype1" ,0 ,&pKeyType1,"v");
+  rc += readArgs( argc,argv,"-keytype2" ,0 ,&pKeyType2,"v");
+  rc += readArgs( argc,argv,"-keyrule1" ,0 ,&pKeyRule1,"v");
+  rc += readArgs( argc,argv,"-keyrule2" ,0 ,&pKeyRule2,"v");
+  rc += readArgs( argc,argv,"-skelrule1" ,0 ,&pSkelRule1,"v");
+  rc += readArgs( argc,argv,"-skelrule2" ,0 ,&pSkelRule2,"v");
+  rc += readArgs( argc,argv,"-skelrule3" ,0 ,&pSkelRule3,"v");
+#endif
+  char * pDebug= "";
+  int lRules = 121; // max size of rule
+  char rules[lRules];
+  rc += readArgs( argc,argv,"-debug",0 ,&pDebug,"v");
+
+  if (strlen(pDebug) > 0)
+  {
+    debug = atoi(pDebug);
+    printf("debug set %i\n",debug);
+  }
+
   if (rc > 0 )
   {
      printf("Problem with parameters %i\n",rc);
@@ -35,23 +99,46 @@ int main( int argc, char *argv??(??))
   if ( pPublic[0] == 0  ) {rc++;printf("-public ...  is required\n");}
   if ( pPrivate[0] == 0  ) {rc++;printf("-private ...  is required\n");}
   if ( pParty[0] == 0  ) {rc++;printf("-party ...  is required\n");}
-  if ( rc > 0) return rc;
+  if ( pType[0] == 0  ) // pType[0] = 'C';
+  {
+      char * pType = "INTERNAL,AES,CIPHER,XPRTCPAC,ANY-MODE";
+  }
+  rc = parseRules(pType,&rules[0],lRules);
+  if ( rc > 0)
+    {
+       printf("Problem parsing rules %s\n",pType);
+       return 8;
+    }
+  if (debug > 0)
+    printf("Skeleton rule:%s.\n",&rules[0]);
 
-  if (rc != 0) return rc;
   if ( strlen(pReplace) > 0  &&
        ( pReplace[0]=='y'  ||  pReplace[0]=='Y')
      ) pReplace = "Y";
   else pReplace = "N";
   // build skeleton
-  char * pData;
-  int lData;
-  rc = doExists("P",pPrivate);
+  char returned[9992 ];
+  int lData = lCKDSRecord;
+//int lData = 725 ; // maxium size for CSNBKTB2
+  char * pData = & returned[0];
+//  returned[0] = 0x77;
+  if ( debug > 0)
+  {
+//   printf("GENDH:buffer %8.8x %i\n",pData,lData);
+  }
+//rc = doExistsP(pPrivate);
+   char data[lData];
+// fprintf(pF,"Key:%.64s\n",pKey);
+   pKeyLabel = pKey;
+   rc =readPKDS(pPrivate,&data[0], &lData);
+//rc = doExistsP(pPrivate);
   if (rc != 0)
   {
     printf("private key not found %s\n",pPrivate);
     return rc;
-    }
-  rc =  doExists("P",pPublic );
+   }
+  rc =readPKDS(pPublic,&data[0], &lData);
+//rc =  doExistsP(pPublic );
   if (rc != 0)
   {
     printf("public  key not found %s\n",pPublic );
@@ -60,15 +147,22 @@ int main( int argc, char *argv??(??))
   //
   //       Now the ICSF processing
   //
-  rc =  skeletonAES("C",&pData, &lData);
-  if (rc != 0) return rc;
+  rc =  skeletonAES(&rules[0],pData, &lData);
+  if (rc != 0)
+     return rc;
+  // reset the length
+  lData = sizeof(returned);
+  rc= GENDH(pPrivate, pPublic,pData,& lData,pParty);
+  if (rc != 0)
+      return rc;
 
-  rc= GENDH(pPrivate, pPublic,& pData,& lData,pParty);
-  if (rc != 0) return rc;
   // create record in ckds
   rc = addCKDS(pKey,pData,lData,pReplace);
   if (rc != 0) return rc;
   else
   printf("GENDH:Added %s successfully\n",pKey);
-   return rc;
+  keyTYPE kt;
+  kt         =   processKey(pData,lData, "", ",", stdout );
+  printf("\n");
+  return rc;
 }

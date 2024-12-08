@@ -1,0 +1,90 @@
+// part of token list processing
+/**************************************************************
+ MIT License
+ Copyright (c) 2024 Colin Paice
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+ The above copyright notice and this permission notice shall be included in all
+ copies or substantial portions of the Software.
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
+ * Contributors:
+ *   Colin Paice - Initial Contribution
+ ************************************************************/
+ int getToken(char * pToken,char * pST,int lST)
+ {
+   int rc = -1;
+   int rs = -1;
+   int exit_data_length = 0 ;
+   char exit_data[1];
+   int rule_array_count = 2;
+   char rule_array[16];
+   memcpy(&rule_array[0],"OBJECT  ALL     ",16);
+   char handle[44];
+   memset(&handle[0],' ',44);
+   memcpy(&handle[0],pToken,            32) ;
+   int lList = 44        ;
+   char output_list[44];
+   int handle_count= 1;
+   int iLoop;
+// printf("SearchTemplate length %d\n",lST);
+// printHex(stdout,pST            ,lST);
+// printf("handle %.44s\n", handle);
+// printHex(stdout,&handle[0],44);
+   for (iLoop = 0;           ; iLoop ++)
+   {
+     lList = 500 ;
+     CSFPTRL(
+        &rc,
+        &rs,
+        &exit_data_length,
+        &exit_data[0],
+        &handle[0],
+        &rule_array_count,
+        &rule_array[0],
+        &lST,
+        pST,
+        &lList,
+        &handle_count,
+        &output_list[0]);
+
+     if (rc == 0  && rs == 0) break; // successful end
+     else
+     if (rc == 4  && rs == 3017) ;//  more data coming
+     else
+        printf("CSFPTRL Object all rc:%d rs:%d\n",rc,rs);
+     if (rc >= 8) break;
+    printf("List %32.32s Sequence:%8.8s Type:%1.1s\n",
+           &output_list,&output_list[32],&output_list[40]);
+    if (detail > 1)
+      getDetail(&output_list[0]);
+    memcpy(&handle[0],&output_list[0],44);
+  }
+  if ( rs == 11000)
+  {
+      printf(
+    "The value specified for length parameter for a key "
+    "token, key, or text field is not valid. \n"
+    "This can also occur if "
+    "either the key type of the key or the "
+    "algorithm of the key is unsupported by the "
+    "callable service.\n");
+       printf("%.44s\n",&handle[0]);
+       printf("%.44s\n",&output_list[0]);
+       printf("%d\n", lList);
+  }
+  if ( rs == 3026)
+  {
+    printf(
+    "The z/OS PKCS #11 token or object handle syntax is invalid\n");
+  }
+ }

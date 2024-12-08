@@ -1,6 +1,6 @@
-// add an entry to the PKDS
-#ifndef ADDPKDS_INCLUDE
-#define ADDPKDS_INCLUDE
+// read from a CKDS
+#ifndef READCKDS_INCLUDE
+#define READCKDS_INCLUDE
 /**************************************************************
  MIT License
  Copyright (c) 2024 Colin Paice
@@ -22,58 +22,49 @@
  * Contributors:
  *   Colin Paice - Initial Contribution
  ************************************************************/
-#include <delPKDS.h>
+#include <delCKDS.h>
 #include <do64.h>  // colin special
 /* --------------------------------------------------------------- */
-/* Add a record to the keystore - if it exist already replace it   */
+// read a record from the keystore
 /* --------------------------------------------------------------- */
 #define RECORD_EXISTS 16036
-
-int addPKDS1(char * key, char * pData, int lData)
+int readCKDS(char * key, char * pData, int * lData)
 {
+  int l = *lData;
+  if (l     != 725 )
+  {
+      printf("readCKDS expects a length of 725, passed in %i\n",lData);
+      return 8;
+  }
   int rc;
   int rs;
   int zero = 0;
   do64(Key,key);
-  rc= CSNDKRC(
-             &rc  ,                   /* return code              */
-             &rs,                     /* reason code              */
-             &zero,                   /* exit data length         */
-             0,                       /* exit data[]              */
-             &zero,                   /* rule array count         */
-             0,                       /* rule array[]             */
-  (char *)  &Key,                     /* key key[64]               */
-             &lData,                  /* key token length   */
-  (char *)   pData); /* key token[]                   */
+  rc= CSNBKRR2(
+               &rc  ,                   /* return code              */
+               &rs,                     /* reason code              */
+               0, //  &zero,            /* exit data length         */
+               0,                       /* exit data[]              */
+               0, //  &zero,            /* rule array count         */
+               0,                       /* rule array[]             */
+               &Key[0],                  /* key key[64]               */
+               &l    ,                   /* key token length   */
+               pData        );/* key token[]                   */
+//printf("READCKDS %i %i %64.64s. length %i\n",rc,rs,&Key[0],l    );
   if ( rc > 0)
-  {
-      printf("CSNDKRC add %64.64s PKDS %i rs %i %s\n",Key,
-         rc,rs,csfgetrc(rs));
-  }
-  if (rs == RECORD_EXISTS) return rs;
-  return rc;
-}
-//
-//
-//
-int addPKDS(char * key, char * pData, int lData, char * pDelete)
-{
-  int rc;
-  int i;
-  printf("addPKDS\n");
-  for( i = 0; i<2; i++ )  // go round twice once with delete
-  {
-     rc = addPKDS1(key,pData,lData);
-     if (rc == 0) break;
-     if (rc == RECORD_EXISTS && pDelete[0]=='Y')
-     {
-       printf("  Record existed, and REPLACE=Y specified\n");
-       rc = deletePKDS(key);
-     }
-     if (rc != 0) break;
-  }
-  if (rc == 0)
-  printf("addPKDS %64.64s successful\n",key);
-  return rc;
+    {
+      printf("  READCKDS CSNBKRR2 add %s CKDS %i rs %i %s\n",key,
+           rc,rs,csfgetrc(rs));
+      if ( rs == 2040|| debug > 0 ) // bad data
+      {
+        printf("Key %64.64s\n",Key[0]);
+//      printHex(stdout,&Key[0],64);
+//      printf("Data length %i\n",lData);
+//      printHex(stdout,pData,lData);
+      }
+    return 8;
+    }
+   *lData = l;
+   return rc;
 }
 #endif

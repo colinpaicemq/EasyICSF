@@ -1,0 +1,117 @@
+// print out the return code from ICSF as a text string
+#ifndef CSFGETRC_INCLUDED
+#define CSFGETRC_INCLUDED
+/**************************************************************
+ MIT License
+ Copyright (c) 2024 Colin Paice
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+ The above copyright notice and this permission notice shall be included in all
+ copies or substantial portions of the Software.
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
+ * Contributors:
+ *   Colin Paice - Initial Contribution
+ ************************************************************/
+#define printError(a,b) {printf("%s\n",a);return b;}
+char *csfgetrc(int reason)
+{
+  typedef struct rclist
+  {
+    int value;
+    char * reason;
+  } rcdata;
+  rcdata rclist[] = {
+    {    0,"No error found"},
+    {    0,"Possible coding error passing in rc? "},
+    {   47,"A source key token is unusable because it contains"
+           " data that is not valid or undefined."},
+    {   61,"The keyword supplied with the key_type "
+           "parameter is not valid"},
+    {   72,"The value specified for length parameter for a key token,"
+           " key, or text field is not valid"},
+    {  155,"The value that the generated_key_identifier parameter "
+           "specifies is not valid, \nor it is not consistent "
+           "with the value that the key_form parameter "},
+    {  181,"Bad key[0] eg is external when internal was expected"},
+    {  762,"The key values structure for CSNDPKB has a field in error"
+            "A length or format is not correct"},
+    { 2012,"The rule_array_count parameter contains a"
+           " number that is not valid."},
+    { 2016,"The rule_array parameter contents are incorrect"},
+    { 2040,"Wrong key(KEK?) type eg internal/external"},
+    { 2054,"RSA:OAEP optional encoding parameters failed validation"},
+    { 2055,"The RSA public key is too small to encrypt the DES key"},
+    { 2089,"The algorithm from the KEK does not match the algorithm"
+           " of the source key identifier\n"
+           "Or you are trying to use a non RSA public/private where"
+           " an RSA is expected"},
+    { 2095,"The value in the key_form parameter is incompatible "
+           "with the value in the key_type parameter"},
+    { 2113,"A key token contains invalid payload."  },
+    { 2141,"A key verification pattern failed to verify. "
+           "Either the key-encrypting key provided to unwrap an "
+           "encrypted key contained in an external key-token "
+           "is incorrect or an external key-token is invalid"
+           "\nPerhaps trying to decrypt an RSA encrypted with an "
+           "AES key"},
+    { 2154,"At least one key token passed to this callable service "
+           "does not have the required key type for the specified "
+           "function "},
+    { 2158,"The public and private keys do not match. They need "
+           "to be the same type (eg Brain Pool) and key size"},
+    { 3003,"An output parameter is too short to hold the "
+           "output of the request "},
+    { 3326,"Date value out of range                             "},
+    { 3328,"Cannot set archive, because prohibit archive flag is set"},
+    { 3329,"Date usage value out of range.eg start > end        "},
+    { 3333,"A date value is invalid                            "},
+    { 3336,"The value specified for the input metadata length"
+           " for the KDS metadata read service is incorrect "},
+    { 3342,"A service passed the label of a KDS record which is not yet "
+           "active. The key material validity start date is in the "
+           "future"},
+    { 3343,"The record is Deactivated. The validity date is past"},
+    { 3344,"The record is Active-Archived and cannot be used"},
+
+    { 3346,"An update to the xKDS failed. See detailed record "},
+    {10012,"Key not found" },
+    {10036,"A Key is not valid"                             },
+    {10040,"Key identifiers contain a version number"},
+    {10048,"The key_type parameter does not contain one of the valid"
+           " types for the service or the keyword TOKEN"},
+    {10124,"The key identifier you supplied cannot be exported because"
+           "there is a a prohibit-export restriction on the key"},
+    {10126,"rule_array parameter is not consistent"},
+    {11000,"Invalid length for a key token, key, or text field"},
+    {11012,"The internal or external private key token contains "
+           "flags that are not valid"},
+    {11040,"Inconsistent formatting method (eg PKA92) used     "},
+    {11056,"The input PKA token contains "
+            "length fields that are not valid"},
+    {16000,"Authorization problem"},
+    {16004,"RACF failed your request to use the key label or token"},
+    {16024,"Key token is not valid"},
+    {16032,"Invalid label name"},
+    {16036,"Record already exists in the database"},
+    {16056,"The coprocessor failed"}
+                     };
+  int size;
+  int i;
+  size = sizeof(rclist)/sizeof(rclist[0]);
+  for ( i = 0; i<size;i++ )
+  {
+    if(rclist[i].value  == reason) return rclist[i].reason;
+  }
+  return "";
+}
+#endif

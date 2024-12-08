@@ -1,0 +1,329 @@
+// print variable key information
+#ifndef PRINTVAR_INCLUDE
+#define PRINTVAR_INCLUDE
+/**************************************************************
+ MIT License
+ Copyright (c) 2024 Colin Paice
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+ The above copyright notice and this permission notice shall be included in all
+ copies or substantial portions of the Software.
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
+ * Contributors:
+ *   Colin Paice - Initial Contribution
+ ************************************************************/
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <string.h>
+#include <printhx.h>
+#include <keytest.h>
+// used in list to pass a keyname in
+char * pKeyLabel = "";
+void printKeyType(char * before,keyTYPE kt,char * after,FILE * f);
+#ifndef  switchData
+#define switchData(val,text)  \
+  case val: pOut = text;break;
+#define ifvalue(val,which)  \
+  case val: kt.b.which = 1;break;
+#endif
+///////////////////////
+keyTYPE printVAR( char * p,int lData,
+           char * before, char * after,  FILE * pFile)
+{
+ // if (debug > 0)
+ //  printf("Compiled %s %s %s.\n",__FILE__,__DATE__, __TIME__);
+  typedef struct rclist
+  {
+    int value;
+    char h;
+    char * reason;
+  } rcdata;
+  int rc;
+  keyTYPE kt;
+  kt.i = 0;
+  char * pOut = "";
+  if (debug > 0)
+  {
+//  fprintf(pFile,"Dump of print variable record \n");
+//  printHex(pFile,p,lData);
+  }
+
+  if ( lData == 64)
+     printf("===============Fixed length data in printvar\n");
+  if ( lData == 64 && p[4] == 0x04)
+  {
+    if (p[0] == 0x01) fprintf(pFile,"  Internal key token\n");
+    fprintf(pFile ,"      AES fixed length token\n");
+    kt.b.INTERNAL = 1;
+    kt.b.FIXED    = 1;
+    kt.b.AES      = 1;
+//  printHex(stdout,p,lData);
+    printHex(pFile ,p,12   );
+   return kt;
+  }
+  int i,j,k;
+  //  variable length
+  rcdata   common[] =
+  {  {0,0x00,"Null token"},
+     {0,0x01,"Internal token"},
+     {0,0x02,"External token"},
+     {0,0x00,"Null token"},
+     {4,0x05,"Version 5 "},
+     {8,0x00,"Wrapping No key"},
+     {8,0x01,"Wrapping clear(internal)"},
+     {8,0x02,"Wrapping "
+           "key is encrypted under a key-encrypting key (external)"},
+     {8,0x00,"Wrapping "
+           "key is encrypted under the master key (internal)"},
+     { 9,0x00,"Key Verification:None"},
+     { 9,0x01,"Key Verification:AES master"},
+     { 9,0x02,"Key Verification:key-encrypting key verification pattern"},
+     { 9,0x03,"Key Verification:Truncated AES master"},
+     {26,0x00,"Wrapping Method:Key in clear"},
+     {26,0x02,"Wrapping Method:AESKW"},
+     {26,0x03,"Wrapping Method:PKOAEP2"},
+     {27,0x00,"Hash: Non for clear key"},
+     {27,0x01,"Hash: SHA-1"},
+     {27,0x02,"Hash: SHA-256"},
+     {27,0x04,"Hash: SHA-384"},
+     {27,0x08,"Hash: SHA 512"},
+     {28,0x00,"Variable length payload"},
+     {28,0x01,"Fixed length payload"},
+     {41,0x01,"Key use alg DES"},
+     {41,0x02,"Key use alg AES"},
+     {41,0x03,"Key use alg HMAC"},
+     // next is actually offset 42 ... but first char is 00 xx
+     {43,0x01,"Key type:Cipher"},
+     {43,0x02,"Key type:Mac"},
+     {43,0x03,"Key type:Exporter"},
+     {43,0x04,"Key type:Importer"},
+     {43,0x05,"Key type:PinProt"},
+     {43,0x06,"Key type:PinCalc"},
+     {43,0x07,"Key type:PinPRW"},
+     {43,0x08,"Key type:DESUSECV"},
+     {43,0x09,"Key type:PinGENKY"},
+     {43,0x0A,"Key type:SecMsg"},
+     {43,0x09,"Key type:PinGENKY"},
+  };
+  int lCommon  ;
+  int unknown = 0;
+  lCommon    =  sizeof(common)/sizeof(common[0]);
+  kt.b.SYMMETRIC= 1;
+  switch (p[41])
+  {
+    case 0x01: kt.b.DES       = 1; break;
+    case 0x02: kt.b.AES       = 1; break;
+    case 0x03: kt.b.HMAC      = 1; break;
+  }
+  switch (p[0])    // it is actually p[42] for length 2
+  {
+    case 0x00: kt.b.tNULL     = 1; break;
+    case 0x01: kt.b.INTERNAL  = 1; break;
+    case 0x02: kt.b.EXTERNAL  = 1; break;
+  }
+  kt.b.VARIABLE = 1;
+
+  switch (p[43])    // it is actually p[42] for length 2
+  {
+    case 0x01: kt.b.CIPHER    = 1; break;
+    case 0x02: kt.b.MAC       = 1; break;
+    case 0x03: kt.b.EXPORTER  = 1; break;
+    case 0x04: kt.b.IMPORTER  = 1; break;
+  }
+  switch (p[26])   // it is actually p[42] for length 2
+  {
+    case 0x00: kt.b.KEYCLEAR  = 1; break;
+    case 0x02: kt.b.KEYENCR   = 1; break;
+  }
+
+//printKeyType("",kt,"\n",pFile);
+  printKeyType(before,kt,after,pFile);
+  fprintf(pFile,"\n");  // the trailing end of line for previous
+  fprintf(pFile,"  variable key \n");
+
+  // now the checksum module code
+  int keyLength = 0;
+  int keyCheckSum[2]; // make it easier to print if 2 ins
+  //
+  fprintf(pFile,"  {\n");
+  fprintf(pFile,"    Length of record:%i\n",lData);
+  for (j = 0;j< lCommon; j++ )
+  {
+    int kOffset = common[j].value;
+    if (kOffset < lData  && p[kOffset] == common[j].h )
+        fprintf(pFile,"    %s\n",common[j].reason);
+    }
+  if (p[41] == 0x02 &&  p[43] ==  0x01 ) /// AES  CIPHER
+  {
+    switch (p[47])
+    {
+        switchData(0x00,"Key used:CBC")
+        switchData(0x01,"Key used:ECB")
+        switchData(0x02,"Key used:CFB")
+        switchData(0x03,"Key used:ECB")
+        switchData(0x04,"Key used:GCM")
+        switchData(0x05,"Key used:XTS")
+        switchData(0x06,"Key used:FF1")
+        switchData(0x07,"Key used:FF2")
+        switchData(0x08,"Key used:FF2.1")
+        switchData(0xff,"Key used:Any")
+        default:     pOut = "UNKNOWN key type  ";
+        unknown ++;
+    }
+    fprintf(pFile,  "    %s\n",pOut);
+   #define bytetest(a,b,c) if ((p[a]  & b) == b)  \
+      fprintf(pFile,"    %s\n",c)
+   #define bytetest2(a,b,c) if ((p[a]  & b) == b)  \
+      fprintf(pFile,"    %s\n",c)
+    int o;
+    o = 48 + p[44] * 2;
+    char t  = p[o]  && 0xc0; // 11......
+    switch(t)
+    {
+      case 0x11: fprintf(pFile,"    Key incomplete 2+\n");
+      case 0x10: fprintf(pFile,"    Key incomplete 1+\n");
+      case 0x01: fprintf(pFile,"    Key incomplete 1\n");
+      case 0x00: fprintf(pFile,"    Key complete\n");
+    }
+    bytetest(o ,0x10,"Key encrypted untrusted KEK\n");
+    bytetest(o ,0x08,"Key was in a format without type/usage attributes\n");
+    bytetest(o ,0x04,"Key was encrypted with key weaker than itself\n");
+    bytetest(o ,0x02,"Key was in a non-CCA format\n");
+    bytetest(o ,0x01,"Key was encrypted in ECB mode\n");
+
+    bytetest(50,0x40,"Allow export using unauthenticated asymmetric key");
+    bytetest(50,0x20,"Allow export using authenticated asymmetric key");
+    bytetest(50,0x10,"Allow export in RAW forma");
+    bytetest(50,0x80,"Allow export to CPACF protected key format");
+    bytetest(50,0x01,"Compliant-tagged key. Applies to AES only");
+    bytetest(51,0x80,"Prohibit export using DES key");
+    bytetest(51,0x40,"Prohibit export using AES key");
+    bytetest(51,0x08,"Prohibit export using RSA key");
+    o = 50 + p[44] * 2;
+    int  z = p[o  ];
+    fprintf(pFile,"    Pedigree:%i-",z);
+    switch (p[o ])
+    {
+        switchData(0x00,"Unknown (Key Token Build2, Key Translate2)");
+        switchData(0x01,"Other - method");
+        switchData(0x02,"Randomly Generated (Key Generate2)");
+        switchData(0x03,"Key agreement (ECC Diffie-Hellman)");
+        switchData(0x04,"Created from cleartext key components");
+        switchData(0x05,"Entered as a cleartext key value");
+        switchData(0x06,"Derived from another key");
+        switchData(0x07,"operational key load");
+        default:     pOut = "UNKNOWN key management type";
+        unknown ++;
+    }
+    fprintf(pFile,  "%s\n",pOut);
+
+    // now pedigree curren
+    z = p[o+1];
+    fprintf(pFile,"    Pedigree current:%i-",z);
+    switch (p[o+1])
+    {
+        switchData(0x00,"Unknown (Key Token Build2)");
+        switchData(0x01,"Other - method");
+        switchData(0x02,"Randomly Generated (Key Generate2)");
+        switchData(0x03,"Key agreement (ECC Diffie-Hellman)");
+        switchData(0x04,"Created from cleartext key components");
+        switchData(0x05,"Entered as a cleartext key value");
+        switchData(0x06,"Derived from another key");
+        switchData(0x07,"Imported from token with pedigree key");
+        switchData(0x08,"Imported from token with no pedigree key");
+        switchData(0x09,"Imported from a CCA token that had a CV");
+        switchData(0x0A,"Imported from a CCA token that had no CV");
+        switchData(0x0B,"Imported from a TR-31 key block that contained"
+                        " a TR-31 Import");
+        switchData(0x0C,"Imported from a TR-31 key block that did not contain"
+                        " a TR-31 Import");
+        switchData(0x0D,"Imported using PKCS 1.2 RSA encryption(SKI2)");
+        switchData(0x0E,"Imported using PKCS OAEP encryption(SKI2)");
+        switchData(0x0F,"Imported using PKA92 RSA encryption(SKI2)");
+        switchData(0x10,"Imported using RSA ZERO-PAD encryption(SKI2)");
+        switchData(0x11,"Converted from CCA token with CV (KT2)");
+        switchData(0x12,"Converted from CCA token with NO CV (KT2)");
+        switchData(0x13,"Cleartext keys or entered at TKE");
+        switchData(0x14,"Exported from CCA with pedigree (SKE)");
+        switchData(0x15,"Exported from CCA with no  pedigree (SKE)");
+        switchData(0x16,"Exported using PKCS OAEP encryption(SKE)");
+        default:     pOut = "UNKNOWN key management type";
+        unknown ++;
+    }
+    fprintf(pFile,  "%s\n",pOut);
+//  fprintf(pFile,"    Pedigree current: %i (page 1537)\n",z);
+  }
+  if (pFile == 0) return kt;
+
+  // otherwise print more details
+  char adl1= p[32]; // associated data
+  char adl2= p[33]; // associated data
+  char kl  = p[34]; // key name length
+  char iead= p[35]; // L'IBM extended associated data in bytes:
+  char uad = p[36]; // L'installation-definable associated data in bytes
+  char pl1 = p[38]; // Payload length .. 2 bytes
+  char pl2 = p[39];
+  char kuf = p[44]; // L'key usage field cound
+  char kmf = p[45 + 2* kuf]; // L'Key-management field count (kmf)
+
+  // now display the payload
+  // l'payload is 2 bytes
+  int lpl  = 256* pl1 + pl2; // length of payload in bits
+  // Length of the associated data in bytes: adl  is two bytes
+  //  we skip over the associated data
+  int adl = 256  * adl1 + adl2;
+  if ( lpl > 0)
+  {
+    if (debug > 4)
+    {
+      fprintf(pFile,"Payload\n");
+      printHex(pFile ,&p[30+adl],(lpl+7)/8);
+    }
+  }
+  // display any keyname
+  if ( kl == 0)
+     fprintf(pFile,"    No Name within Key\n");
+  else
+  {
+     int ii;
+     char * kn =  &p[46+kuf*2+kmf*2];
+     if ( debug >= 8)
+     {
+        fprintf(pFile,"ASCII\n");
+        printHex(pFile,kn,kl);
+     }
+     char tempKey[kl];
+     memcpy(&tempKey[0],kn,kl);
+     EBCDIC_it(&tempKey[0],kl);
+     fprintf(pFile,"    Key name from record(ASCII):%*.*s\n",kl,kl,tempKey);
+     if (strlen(pKeyLabel) > 0)
+        printf("Key=%64.64s Internal key=%*.*s\n",pKeyLabel,
+            kl,kl,tempKey);
+  }
+  //if  IBM extended associated data in bytes has data
+  if (iead > 0)
+  {
+     fprintf(pFile,"IBM extended data\n");
+     printHex(pFile ,&p[46+kuf*2+kmf*2]+kl,iead);
+  }
+  if (uad  > 0)
+  {
+     fprintf(pFile,"Installation defined\n");
+     printHex(pFile ,&p[46+kuf*2+kmf*2 +kl+iead],uad);
+  }
+  // code to dump out the encryped data
+  fprintf(pFile,"   }\n");
+  return kt;
+}
+#endif

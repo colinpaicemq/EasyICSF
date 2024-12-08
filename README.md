@@ -2,7 +2,20 @@
 This is a major update to my EasyICSF package.  It provides functions which are missing in ICSF.
 For the old documentation and Rexx code see [the old documentation](READMEOLD.md). 
 
-This package provides load modules which can be run in batch to: 
+I have blogged on many ICSF topics, 
+see [All I ever wanted to know about ICSF, and data set encryption.](https://colinpaice.blog/?p=26839)   This coverss
+on
+
+-  [What are the ICSF bits?](https://colinpaice.blog/?p=26332)
+-  [Using ICSF within a single image or sysplex](https://colinpaice.blog/?p=26378)
+
+-  [Using ICSF in a multi system environment](https://colinpaice.blog/?p=26751)
+-  [Generating ICSF keys using Diffie-Hellman](https://colinpaice.blog/?p=26785)
+-  [Using ICSF API function CSNBKGN2 to generate keys](https://colinpaice.blog/?p=26545)
+-  [What ICSF APIs do I need to use for AES CIPHER keys](https://colinpaice.blog/?p=26614)
+
+
+This Github package provides load modules which can be run in batch to: 
 
 - [list the contents of a PKDS and CKDS](#List-the-contents-of-the-CKDS-and-PKDS)
 - [export a key from CKDS into a data set so it can be imported on another system](#Export-a-key)
@@ -20,6 +33,31 @@ It also provides examples of how to use the ICSF application programming interfa
 You can pass parameters to the program using PARM='...', or with the PARMDD pointing to a data sets.
 If you use PARMDD, trailing blanks are removed and the data is concatentated together.  In this case starting 
 the parameters in column 2 (or higher) so you get a leading blank.
+
+## Install the load modules
+
+You need to ftp the loadmodule to z/OS.  For example with FTP you need parameters like
+
+
+
+quote site filetype=seq
+quote site recfm=fb
+quote site lrecl=80
+quote site blksize=400
+quote site tracks
+quote site primary=5
+bin 
+put ISPFLOAD.XMIT.BIN 'myuserid.ISPFLOAD'
+
+Then from TSO use the command RECEIVE INDSN('myuserid.ISPFLOAD')  
+
+##  Copy the JCL
+
+You can copy the members CC* from  the C directory, or just use cut and paste from this document.
+
+
+
+
 
 ## List the contents of the CKDS and PKDS
 
@@ -298,7 +336,7 @@ You need a phrase which is used to generate the value.
 Where the parameters are 
 
 -ptype value
-: where value are the "rules" needed by the API.
+: where value are the "rules" needed by the API.  With commas to separate them, to make them more readable.
 
 - For a CIPHER specify -ptype INTERNAL,AES,CIPHER,XPRTCPAC,ANY-MODE 
 - For an exporter specify -ptype INTERNAL,AES,EXPORTER 

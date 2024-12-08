@@ -1,0 +1,496 @@
+// return information about a key
+#ifndef KEYTYPE_INCLUDE
+#define KEYTYPE_INCLUDE
+/**************************************************************
+ MIT License
+ Copyright (c) 2024 Colin Paice
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+ The above copyright notice and this permission notice shall be included in all
+ copies or substantial portions of the Software.
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
+ * Contributors:
+ *   Colin Paice - Initial Contribution
+ ************************************************************/
+#define lCKDSRecord 725
+typedef  struct ktype {
+   unsigned ERROR    :1;
+   unsigned tNULL    :1;
+   unsigned RSA      :1;
+   unsigned DES      :1;
+   unsigned HMAC     :1;
+   unsigned ECC      :1;
+   unsigned QSA      :1;
+   unsigned RXX      :1;
+   unsigned PRIVATE  :1;
+   unsigned PUBLIC   :1;
+   unsigned AES      :1;
+   unsigned FIXED    :1;
+   unsigned VARIABLE :1;
+   unsigned PKA      :1;
+   unsigned EXPORTER :1;
+   unsigned IMPORTER :1;
+   unsigned MAC      :1;
+   unsigned CIPHER   :1;
+   unsigned DATA     :1;
+   unsigned INTERNAL :1;
+   unsigned EXTERNAL :1;
+   unsigned KEYCLEAR :1;
+   unsigned KEYENCR  :1;
+   unsigned SYMMETRIC:1;
+   unsigned UNKNOWN  :1;
+   unsigned PRIME    :1;
+   unsigned BRAINPOOL:1;
+   unsigned KOBLENZ  :1;
+   unsigned EDWARDS  :1;
+   unsigned AESKW    :1;
+   unsigned PKOAEP2  :1;
+   unsigned short length;
+   unsigned short rc ;
+} ktype ;
+typedef union keyTYPE
+  {
+   struct ktype b;
+   unsigned long long  i;
+  } keyTYPE;
+
+#include <printpka.h>  // colin special
+// keyTYPE printVAR( char * p,int lData,FILE * pFile);
+#include <printvar.h>  // colin special
+
+#define isNULL(a)     a.b.tNULL == 1
+#define isERROR(a)    a.b.ERROR == 1
+#define isRSA(a)      a.b.RSA          == 1
+#define isPKA(a)      a.b.EPKA         == 1
+#define isECC(a)      a.b.ECC          == 1
+#define isECCPRIV(a)  (a.b.ECC  == 1 && a.b.PRIVATE == 1)
+#define isECCPUB(a)   (a.b.ECC  == 1 && a.b.PUBLIC  == 1)
+#define isRSAPRIV(a)  (a.b.RSA  == 1 && a.b.PRIVATE == 1)
+#define isRSAPUB(a)   (a.b.RSA  == 1 && a.b.PRIVATE == 1)
+#define isAES(a)      a.b.AES          == 1
+#define isAESFIXED(a) (a.b.AES  == 1 && a.b.FIXED   == 1)
+#define isEXPORTER(a) a.b.EXPORTER     == 1
+#define isIMPORTER(a) a.b.IMPORTER     == 1
+#define isCIPHER(a)   a.b.CIPHER       == 1
+// #define pECCType(a)   a.b.ERROR        == 1
+// checkit  check first field.
+//          second field can be == 000000 or != 0000000 (length)
+//          offset 4 is the type
+//          4th parm is function name
+#define checkKT(aa,bb,cc,dd)          \
+ if (pIn[0]== aa && memcmp(&pIn[1],0x000000,3) bb 0  && pIn[4] == cc) \
+    kt =  dd(pIn,&output[0],before,after ,pFile);
+#define switchData(val,text)  \
+  case val: pOut = text;break;
+#define ifvalue(val,which)  \
+  case val: kt.b.which = 1;break;
+void printKeyType(char * before,keyTYPE kt,char * after,FILE * f)
+{
+  if (debug > 0)
+  {
+//  printf("kt and before %s. after %s.\n",before,after);
+//  printHex(stdout,&kt,sizeof(kt));
+  }
+  if (kt.b.PKA           == 1) fprintf(f,"%s PKA %s",before,after);
+  if (kt.b.ERROR         == 1) fprintf(f,"%s ERROR %s",before,after);
+  if (kt.b.tNULL         == 1) fprintf(f,"%s NULL %s",before,after);
+  if (kt.b.RSA           == 1) fprintf(f,"%s RSA %s",before,after);
+  if (kt.b.DES           == 1) fprintf(f,"%s DES %s",before,after);
+  if (kt.b.AES           == 1) fprintf(f,"%s AES %s",before,after);
+  if (kt.b.HMAC          == 1) fprintf(f,"%s HMAC %s",before,after);
+  if (kt.b.ECC           == 1) fprintf(f,"%s ECC %s",before,after);
+  if (kt.b.QSA           == 1) fprintf(f,"%s QSA %s",before,after);
+  if (kt.b.RXX           == 1) fprintf(f,"%s RXX %s",before,after);
+  if (kt.b.PRIVATE       == 1) fprintf(f,"%s PRIVATE%s",before,after);
+  if (kt.b.PUBLIC        == 1) fprintf(f,"%s PUBLIC %s",before,after);
+  if (kt.b.FIXED         == 1) fprintf(f,"%s FIXED %s",before,after);
+  if (kt.b.EXPORTER      == 1) fprintf(f,"%s EXPORTER %s",before,after);
+  if (kt.b.IMPORTER      == 1) fprintf(f,"%s IMPORTER %s",before,after);
+  if (kt.b.CIPHER        == 1) fprintf(f,"%s CIPHER %s",before,after);
+  if (kt.b.INTERNAL      == 1) fprintf(f,"%s INTERNAL %s",before,after);
+  if (kt.b.EXTERNAL      == 1) fprintf(f,"%s EXTERNAL %s",before,after);
+  if (kt.b.VARIABLE      == 1) fprintf(f,"%s VARIABLE %s",before,after);
+  if (kt.b.SYMMETRIC     == 1) fprintf(f,"%s SYMMETRIC %s",before,after);
+  if (kt.b.KEYCLEAR      == 1) fprintf(f,"%s Key Clear %s",before,after);
+  if (kt.b.KEYENCR       == 1) fprintf(f,"%s Key Encrypted %s",before,after);
+  if (kt.b.UNKNOWN       == 1) fprintf(f,"%s UNKNOWN %s",before,after);
+  if (kt.b.AESKW         == 1) fprintf(f,"%s Wrap AESKW %s",before,after);
+  if (kt.b.PKOAEP2       == 1) fprintf(f,"%s Wrap PKOAEP2 %s",before,after);
+  if (kt.b.PRIME         == 1) fprintf(f,"%s PRIME %s",before,after);
+  if (kt.b.BRAINPOOL     == 1) fprintf(f,"%s BRAINPOOL %s",before,after);
+  if (kt.b.KOBLENZ       == 1) fprintf(f,"%s KOBLENZ %s",before,after);
+  if (kt.b.EDWARDS       == 1) fprintf(f,"%s EDWARDS %s",before,after);
+  if (kt.b.length   != 0)      fprintf(f,"%s Key length %hd %s",before,
+                                      kt.b.length, after);
+  return;
+}
+// #include <PKIPUB .h>
+// these are used in processKey
+keyTYPE  keyTypeVariable(char * pIn,char * pOutput,
+              char * before, char * after, FILE * pFile);
+keyTYPE  keyTypePKA(char * pIn,char * pOutput ,
+              char * before, char * after, FILE * pFile);
+keyTYPE  keyTypeRXXDESFixed(char * pIn,char * pOutput,
+              char * before, char * after, FILE * pFile);
+keyTYPE  keyTypeAESFixed(char * pIn,char  *  pOutput ,
+             char * before, char * after, FILE * pFile);
+keyTYPE   keyTypeVariableNull(char * pIn,char * pOutput,
+             char * before, char * after, FILE * pFile);
+keyTYPE      keyTypeDESFixed(char * pIn,char * pOutput,
+             char * before, char * after, FILE * pFile);
+//
+//   processKey
+//
+keyTYPE processKey(char * pIn  , int lIn,
+    char * before, char * after,  FILE * pFile)
+ {
+  if (debug >= 8)
+  {
+    fprintf(stderr,"===keyType=== before %s.  after %s.\n",before,after);
+    printHex(stderr,&pIn[0],64);
+  }
+  char * pOut;
+  keyTYPE kt;
+  kt.i = 0;
+  char  output[60];
+  output[0]=0;// say it is a null string
+ //checkKT( p[0] ... p[1:3],p[4] then call routine)
+      checkKT(0x01,==,0x04,keyTypeAESFixed   )
+ else checkKT(0x02,==,0x04,keyTypeAESFixed   )
+ else checkKT(0x01,==,0x00,keyTypeDESFixed   )
+ else checkKT(0x02,==,0x01,keyTypeDESFixed   )
+ else checkKT(0x01,==,0x01,keyTypeDESFixed   )
+ else checkKT(0x02,==,0x10,keyTypeRXXDESFixed)
+  //
+  // variable symmetric
+  //   null
+ else checkKT(0x00,!=,0x00, keyTypeVariableNull )
+
+ else checkKT(0x01,!=,0x05, keyTypeVariable     )
+ else checkKT(0x02,!=,0x05, keyTypeVariable     )
+  //
+  // PKA
+  //  internal
+ else checkKT(0x1e,!=,0x00, keyTypePKA          )
+ else checkKT(0x1f,!=,0x00, keyTypePKA          )
+  //
+  else
+  {
+    printf("     Keytype:Unrecognised data \n");
+    printHex(stdout,pIn,16);
+    strcpy(output,"???????? ");
+    kt.b.ERROR = 1;
+  }
+//printKeyType(before,kt,after,pFile);
+  return kt;
+ }
+keyTYPE keyTypeNull(char * pIn,char * pOutput ,
+             char * before, char * after, FILE * pFile)
+{
+   keyTYPE kt;
+   kt.i = 0;
+   kt.b.tNULL = 1;
+   printKeyType("",kt,",",pFile);
+   return kt;
+}
+keyTYPE   keyTypeVariableNull(char * pIn,char * pOutput,
+             char * before, char * after, FILE * pFile)
+{
+   keyTYPE kt;
+   kt.i = 0;
+   kt.b.VARIABLE = 1;
+   kt.b.tNULL    = 1;
+   printKeyType(before,kt,after,pFile);
+   return kt;
+}
+ keyTYPE  keyTypeAESFixed(char * pIn,char  *  pOutput ,
+             char * before, char * after, FILE * pFile)
+{
+   fprintf(pFile, "keyTypeAESFixed \n");
+   keyTYPE kt;
+   kt.i = 0;
+   char * p = pIn; // used in bytetest etc
+   char * pOut;
+   kt.b.AES      = 1;
+   kt.b.FIXED    = 1;
+   if (pIn[0] == 0x01 )  kt.b.INTERNAL = 1;
+   else
+   if (pIn[0] == 0x02 )  kt.b.EXTERNAL = 1;
+
+   if (pIn[6] && 0x80 == 1)
+       kt.b.KEYENCR = 1;
+   else
+       kt.b.KEYCLEAR= 1;
+#ifdef delete
+//  bytetest(6 ,0x80,"Encrypted key and master key pattern present");
+//  bytetest(6 ,0x40,"Control Vector present");
+//  bytetest(6 ,0x20,"Valid for transport key only");
+//  switch (p[7])
+//  {
+//      switchData(0x00,"The key is encrypted by using the "
+//                      "original CCA method(ECB)");
+//      switchData(0x20,"Wrapped WRAP-ENH SHA-1");
+//      switchData(0x40,"Wrapped WRAP-ENH2 SHA256");
+//      switchData(0x46,"Wrapped WRAP-ENH3 SHA256");
+//      default:     pOut = "UNKNOWN key type  ";
+// }
+// fprintf(pFile,  "    %s\n",pOut);
+//
+// switch (p[59])
+//  {
+//      switchData(0x00,"Single length key");
+//      switchData(0x10,"Double length key");
+//      switchData(0x20,"Truple length key");
+//      default:     pOut = "UNKNOWN key length";
+// }
+// fprintf(pFile,  "    %s\n",pOut);
+// unsigned long int validation;
+// memcpy(&validation,p+60,4);
+// fprintf(pFile,"    Token validation key %8.8x\n",validation);
+#endif
+   printKeyType("",kt,",",pFile);
+   return kt;
+}
+keyTYPE      keyTypeDESFixed(char * pIn,char * pOutput,
+             char * before, char * after, FILE * pFile)
+{
+   keyTYPE kt;
+   kt.i = 0;
+   char * pOut;
+   char * p = pIn; // used in bytetest etc
+   kt.b.DES      = 1;
+   kt.b.FIXED    = 1;
+   if (pIn[0] == 0x01 )  kt.b.INTERNAL = 1 ;
+   else
+   if (pIn[0] == 0x02 )  kt.b.EXTERNAL = 1;
+   printKeyType("",kt,",",pFile);
+   fprintf(pFile,  "\n"); //  end the printKeyType
+   bytetest(6 ,0x80,"Encrypted key and master key pattern present");
+   bytetest(6 ,0x40,"Control Vector present");
+   bytetest(6 ,0x20,"Valid for transport key only");
+   switch (p[7])
+    {
+        switchData(0x00,"The key is encrypted by using the "
+                        " original CCA method(ECB)");
+        switchData(0x20,"Wrapped WRAP-ENH SHA-1");
+        switchData(0x40,"Wrapped WRAP-ENH2 SHA256");
+        switchData(0x46,"Wrapped WRAP-ENH3 SHA256");
+        default:     pOut = "UNKNOWN key type  ";
+   }
+   fprintf(pFile,  "    %s\n",pOut);
+
+   switch (p[59])
+    {
+        switchData(0x00,"Single length key");
+        switchData(0x10,"Double length key");
+        switchData(0x20,"Truple length key");
+        default:     pOut = "UNKNOWN key length";
+   }
+   fprintf(pFile,  "    %s\n",pOut);
+   unsigned long int validation;
+   memcpy(&validation,p+60,4);
+   fprintf(pFile,"    Token validation key %8.8x\n",validation);
+   return kt;
+}
+keyTYPE  keyTypeRXXDESFixed(char * pIn,char * pOutput,
+              char * before, char * after, FILE * pFile)
+{
+   keyTYPE kt;
+   kt.i = 0;
+   kt.b.DES      = 1;
+   kt.b.FIXED    = 1;
+   kt.b.RXX      = 1;
+   printKeyType("",kt,",",pFile);
+   return kt;
+}
+//////////////////////////////////
+keyTYPE  keyTypeVariable(char * pIn,char * pOutput,
+              char * before, char * after, FILE * pFile)
+{
+#ifdef delete
+   if (debug  > 0 )
+   {
+     printf("==KEYTYPE:172\n");
+     printHex(stdout,pIn,48);
+   }
+#endif
+   keyTYPE kt;
+   short length;
+   memcpy(&length, &pIn[2  ],2); // get the overall length
+   kt  = printVAR(pIn,length,before,after,pFile);
+   return kt;
+}
+/////////////////////////////////
+ keyTYPE  keyTypePKA(char * pIn,char * pOutput ,
+              char * before, char * after, FILE * pFile)
+{
+   keyTYPE kt;
+   kt.i = 0;
+   kt.b.PKA      = 1;
+   if (pIn[0] == 0x01 )  kt.b.INTERNAL = 1 ;
+   else
+   if (pIn[0] == 0x02 )  kt.b.EXTERNAL = 1 ;
+   switch(pIn[8 ])  // is the first byte of next section
+   {
+       case 0x02:
+            kt.b.RSA      = 1;
+            kt.b.PRIVATE  = 1;
+            break;
+       case 0x04:
+            kt.b.RSA      = 1;
+            kt.b.PUBLIC   = 1;
+            break;
+       case 0x06:
+            kt.b.RSA      = 1;
+            kt.b.PRIVATE  = 1;
+            break;
+       case 0x08:
+            kt.b.RSA      = 1;
+            kt.b.PRIVATE  = 1;
+            break;
+       case 0x09:
+            kt.b.RSA      = 1;
+            kt.b.PRIVATE  = 1;
+            break;
+       case 0x10:
+            kt.b.RSA      = 1;
+            kt.b.PRIVATE  = 1;
+            break;
+       case 0x20:
+            kt.b.ECC      = 1;
+            kt.b.PRIVATE  = 1;
+            break;
+       case 0x21:
+            kt.b.ECC      = 1;
+            kt.b.PUBLIC   = 1;
+            break;
+       case 0x23:
+            kt.b.ECC      = 1;
+            break;
+       case 0x30:
+            kt.b.RSA      = 1;
+            kt.b.PRIVATE  = 1;
+            break;
+       case 0x31:
+            kt.b.RSA      = 1;
+            kt.b.PRIVATE  = 1;
+            break;
+       case 0x50:
+             kt.b.QSA      = 1;
+             kt.b.PRIVATE  = 1;
+             break;
+       case 0x51:
+             kt.b.QSA      = 1;
+             kt.b.PUBLIC   = 1;
+             break;
+    }
+    //
+    // we need to chain down the sections looking for the public key
+    // so we can get the key length
+    //
+    char * pEnd;
+    char * pCurr;
+    short length;
+    memcpy(&length, &pIn[2  ],2); // get the overall length
+    pEnd = pIn + length;
+    for ( pCurr = pIn + 8; pCurr < pEnd;) // start at past the header
+    {
+      short tLength; // temp length
+//    printHex(stdout,pCurr,16);
+      if (pCurr[0] == 0x04 )              // rsa public
+        memcpy(&kt.b.length,&pCurr[8],2); // get the key length
+      else
+      if (pCurr[0] == 0x20 )              // ecc private
+        memcpy(&kt.b.length,&pCurr[12],2); // get the key length
+      else
+      if (pCurr[0] == 0x21 )                // ecc public
+        memcpy(&kt.b.length,&pCurr[10],2); // get the key length
+//    if (pCurr[0] == 0x04 ) break;
+
+      if (kt.b.length != 0) break;
+      memcpy(&tLength,&pCurr[2],2); // get the section length
+      pCurr += tLength;             // and move to the next one
+    }
+   printKeyType("",kt,",",pFile);
+   return kt;
+}
+///////////////////////////////////////////
+ #ifdef delete
+ keyTYPE keyType(char * pIn  , int lIn,
+    char *  pData, int * lData)
+{
+  char * before;
+  char * after;
+  FILE * pFile = 0;
+  keyTYPE kt;
+  kt.i = 0;
+  int length;
+  char * pOut;
+  char  output[60];
+  output[0]=0;// say it is a null string
+  char * pH2; // second header
+  pH2 =&pIn[8];  //  it is offset 8 within the data
+  memset(&output[0],0  ,sizeof(output));  // preset to nulls
+  //output[sizeof(output)-1]=0; // null terminator
+  //printHex(stdout,pIn,lIn);
+  // printf("     Keytype:\n");
+  //printHex(stdout,pIn,16 );
+  //
+  if (debug > 0)
+  {
+    printf("===keyType===\n");
+    printHex(stdout,&pIn[0],64);
+  }
+  //  checkkT generates an if statement
+      checkKT(0x01,==,0x04,keyTypeAESFixed   )
+ else checkKT(0x02,==,0x04,keyTypeAESFixed   )
+ else checkKT(0x01,==,0x00,keyTypeDESFixed   )
+ else checkKT(0x02,==,0x01,keyTypeDESFixed   )
+ else checkKT(0x02,==,0x10,keyTypeRXXDESFixed)
+  //
+  // variable symmetric
+  //   null
+ else checkKT(0x00,!=,0x00, keyTypeVariableNull )
+
+ else checkKT(0x01,!=,0x05, keyTypeVariable     )
+ else checkKT(0x02,!=,0x05, keyTypeVariable     )
+  //
+  // PKA
+  //  internal
+ else checkKT(0x1e,!=,0x00, keyTypePKA          )
+ else checkKT(0x1f,!=,0x00, keyTypePKA          )
+  //
+  else
+  {
+    printf("     Keytype:Unrecognised data \n");
+    printHex(stdout,pIn,16);
+    strcpy(output,"???????? ");
+  }
+  length = sizeof(output);
+  if ( * lData < length        )
+  {
+     printf("     Keytype: input length %i needs %i\n",*lData,length);
+     *lData = length        ;  // give true length
+     kt.b.ERROR = 1;
+     return kt;
+  }
+  * lData = length           ;
+  memcpy(pData,&output,length  );// include null terminator
+  return kt;
+}
+#endif
+///////////////////////////////////////////
+ #endif
+ //
+ //  keyTypeVariable
+ //

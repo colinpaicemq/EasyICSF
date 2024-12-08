@@ -1,37 +1,169 @@
+// export a key from the CKDS with a KEK
 #ifndef export_INCLUDE
 #define export_INCLUDE
+/**************************************************************
+ MIT License
+ Copyright (c) 2024 Colin Paice
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+ The above copyright notice and this permission notice shall be included in all
+ copies or substantial portions of the Software.
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
+ * Contributors:
+ *   Colin Paice - Initial Contribution
+ ************************************************************/
+
+#include <do64.h>  // colin special
+
+
 /* --------------------------------------------------------------- */
-/* Export PKI public key                                           */
+/* Export public key                                               */
 /* --------------------------------------------------------------- */
-int exportpki(char * pKey, char ** pExt, int * lExt)
+int exportKey (char * pKey, char * pKek,
+                 char  * pData,     // return this storage
+                 int * lData)       // and this length
 {
+  FILE * pF =  stdout;
   int rc;
   int rs;
-  int lData = 6500;
-  char * pData = (char *) malloc(lData);
-  if (pData == 0)
+  int i64 = 64;
+  int zero = 0;
+  int AESFixed = 0;
+  char * pMyData;    // return record into here
+  int lMyData;
+  int rule_count;
+  char * pRule;
+  char8 rule_Export[2] =
+                       {"AES     ",
+                        "AESKW   "};
+
+  char8 rule_DES[2] =
+                       {"DES     ",
+                        "AESKWCV "};
+
+///////////////////Now the logic///////////////////
+  // display key info first
+  fprintf(pF,"Export KEY information:%s\n",pKey);
+  keyTYPE kt;
+  kt = getKey("C",pKey,"","",pF);
+  if ( kt.b.ERROR == 1)
   {
-     printf("doExport:problem with malloc\n");
+      return 8;
+  }
+
+  fprintf(pF,"Export KEK information:%s\n",pKek);
+  keyTYPE ktKEK;
+  ktKEK  = getKey("C",pKek,"","",pF);
+
+  if ( ktKEK.b.ERROR == 1)
+  {
+      return 8;
+  }
+  if ( ktKEK.b.EXPORTER == 0)
+  {
+      printf("KEK:%s is not an exporter key\n",pKek);
+      return 8;
+  }
+  // now select which rules based on type
+
+  if(kt.b.AES  == 1)
+  {
+    #ifdef delete
+    if (ktKEK.b.AES == 0)
+    {
+       printf("KEK needs to be AES for DES key\n");
+       return 8;
+    }
+    #endif
+    rule_count                 =  2;
+    pRule = &rule_Export[0][0];
+  }
+  else
+  if(kt.b.DES  == 1)
+  {
+    rule_count                 =  2;
+    pRule = &rule_DES[0][0];
+  }
+  else
+  {
+    printf(" Unknown/supported keytype \n");
+    return 8;
+  }
+
+  //  Key label 1 - 64
+  //  Keytype 65 71 eg CIPHER
+  //  KEK label or CLEAR   72 to 136
+  //  KEK type  = EXPORTER 137
+  //  Key   variable length  145 to...
+
+  // make KEK char 64
+ do64(Key64,pKey);
+ do64(KEK,pKek );
+// here
+//rule_count                 =  2;
+//pRule = &rule_Export[0][0];
+  printf("Exporter Rule: %16.16s\n",pRule);
+
+  char * pOut  = pData;
+  int lIn  = *  lData;              //input string length
+  int lOut = *  lData;              //length returned
+//memset(pOut,' ',64);
+  memcpy(pOut,Key64,64);
+  if (kt.b.CIPHER == 1)
+    memcpy(pOut+64,"CIPHER  ",8);
+  else
+  if (kt.b.EXPORTER == 1)
+    memcpy(pOut+64,"EXPORTER",8);
+  else
+  if (kt.b.IMPORTER == 1)
+    memcpy(pOut+64,"IMPORTER",8);
+  else
+  if (kt.b.DATA     == 1)
+    memcpy(pOut+64,"DATA    ",8);
+  else
+  if (kt.b.DES      == 1)
+    memcpy(pOut+64,"CIPHER  ",8);
+  else
+  {
+     printf("Unknown input key type,cipher etc\n");
      return 8;
   }
-  int zero = 0;
-  int i64 = 64;
-  rc=  CSNDPKX(
-             &rc,             /* return code                   */
-             &rs,             /* reason code                   */
-             &zero,           /* exit data length              */
-             0,               /* exit data[]                   */
-             &zero,           /* rule array count              */
-             0,               /* rule array[]                  */
-             &i64,            /* source token length           */
-             pKey,            /* source token                  */
-             &lData,          /* output token length           */
-             pData        ) ; /* output token                  */
-  printf("CSNDPKX rc %i rs %i %s\n",rc,rs,csfgetrc(rs));
-  if ( rc!= 0) return rc;
-//  printHex(stdout, &pData, lData);
-  * pExt = pData;
-  * lExt = lData;
-  return rc;
-}
+  memcpy(pOut+72,KEK,64);
+  memcpy(pOut+136,"EXPORTER",8);
+  lOut = lOut - 144; // the header
+  char * pOut2 = pOut + 144; // past the header
+  CSNDSYX(
+             &rc,                /* return code            */
+             &rs ,               /* reason code            */
+             &zero,              /* exit data length       */
+             0    ,              /* exit data[]            */
+             &rule_count,        /* rule array count       */
+             pRule,              /* rule array[]           */
+             &i64   ,            /* source key    length,  */
+             &Key64[0],          /* source key             */
+             &i64,               /* RSA public key length  */
+             &KEK[0],            /* RSA public key token   */
+             &lOut,              /* exported key length    */
+             pOut2          );   /* exported key           */
+  if( rc > 0)
+  {
+    printf("ExpAESK:CSNDSYX rc %i rs %i %s\n",rc,rs,csfgetrc(rs));
+    printf("Key %64.64s KEK %64.64s\n",Key64,KEK);
+   return rc;
+  }
+//printf("Length of data in %i out %i \n",lIn,lOut);
+  lOut += 144 ;//the length of the header
+  * lData = lOut;
+  return 0;
+ }
 #endif

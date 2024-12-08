@@ -1,61 +1,102 @@
+
+// import an encrypted cipher from //CSFKEYS
 #ifndef DOIMPCIP_INCLUDE
 #define DOIMPCIP_INCLUDE
-#include <findkey.h>  // colin special
+/**************************************************************
+ MIT License
+ Copyright (c) 2024 Colin Paice
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+ The above copyright notice and this permission notice shall be included in all
+ copies or substantial portions of the Software.
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
+ * Contributors:
+ *   Colin Paice - Initial Contribution
+ ************************************************************/
+#include <unistd.h>
 #include <keytype.h>  // colin special
-int importCipher(char * pKey, char * pKek, char * pRawType,
-                     char ** pData, int * lData)
+int debug;
+// #include <findkey.h>  // colin special
+int importCipher(char * pKey, char * pKek,
+                 char * pData, int   lData,
+                 char * pOut , int * lOut)
 {
   //  CSNDSYI2
+  if   (debug > 0)
+      printf("importCipher kek %s\n",pKek);
   int rc;
   int rs;
   int zero = 0;
   int i64 = 64;
-  int unknown = 0;
-  int lKekData;
+  int rule_count                 =  0;
   char * pKekData;
-  char out[60];
-  int lOut = sizeof(out);
-  rc = findKey(" ",pKek,&pKekData,&lKekData);
-  if ( rc != 0)
+  keyTYPE   ktIn;
+  int lKekName;
+  int lKeyName;
+  printf("Content of the imported string\n");
+  ktIn  =  processKey( pData,lData,"","",stdout);
+  keyTYPE   kt;
+  lKekName = strlen(pKek);
+  if (lKekName > 64 ) lKekName = 64;
+//printf("LKEKNAME %i\n",lKekName);
+  if (lKekName     > 0)
   {
-     printf("impcip:findKey return code %s %i\n",pKey,rc);
-     return rc;
+    kt = getKey("C",pKek,"","",stdout);
+    if (kt.b.ERROR == 1)
+    {
+        return 8;
+    }
+    lKekName = 64;
   }
-  rc = keyType(pKekData,lKekData ,&out[0],&lOut);
-  printf("KEK:%s:%s\n",pKek    ,out);
   // make these char 64
-  do64(KEK,pKek )   ;
-  do64(KEY,pKey      );
+  do64(KEKNAME,pKek ) ;
+  do64(KEYNAME,pKey ) ;
+  do64(KEYNAME2,pKey ) ;
+//ascii_it(&KEYNAME2[0],64);
   char * pRule;
-  char8 rule_RSA[3] =
-                       {"AES     ",
-                        "PKOAEP2 ",
-                        "SHA-256 "};
-//char8 rule_Data_PKI[3] =
-//                       {"AES     ",
-//                        "PKCSOAEP",
-//                        "SHA-256 "};
+  char8 rule_DES[2] =
+                       {"DES     ",
+                        "AESKWCV "};
    char8 rule_Import[2] =
                         {"AES     ",
                          "AESKW   "};
-  int rule_count                 =  2;
-  if ( isIMPORTER( out))
+  if (ktIn.b.DES == 1)
   {
-     pRule = &rule_Import[0][0];
-     printf("KEK %s Is importer. Rule:%24.24s\n",pKek,pRule);
+    pRule = &rule_DES[0][0];
+    rule_count = 2;
+    lKeyName = 0;
   }
-  else  // isRSA( out )
+  else
+  if (ktIn.b.AES == 1)
   {
-     pRule = &rule_RSA[0][0];
-     printf("KEK %s is RSA. Rule:%24.24s\n",pKek,pRule);
+    pRule = &rule_Import[0][0];
+    rule_count = 2;
+    lKeyName = 64;
   }
-  int lOutput = 725 ;
-  char * pOutput = (char * ) malloc(lOutput);
-  if ( pOutput == 0)
+  int lOutput2 = * lOut   ;
+  if (debug > 0)
   {
-    printf("malloc for %i failed in IMPAES\n",lOutput);
+    printf("Rule:");
+    printHex(stdout,pRule, 8 * rule_count);
+    printf("About to issue CSNDSYI2 with input data\n");
+    printHex(stdout, pData, lData);
+    printf("Rule count              %i\n",rule_count);
+    printf("Length of output buffer %i\n",lOutput2);
+    printf("Length of input lData   %i\n",lData   );
+    printf("Key name Length         %i\n",lKeyName);
+    printHex(stdout,&KEYNAME2[0],lKeyName);
+    printf("KeK name Length         %i\n",lKekName);
   }
-//printf("rule %16.16s\n",pRule );
   CSNDSYI2 (
               &rc,                /* return code            */
               &rs ,               /* reason code            */
@@ -63,24 +104,25 @@ int importCipher(char * pKey, char * pKek, char * pRawType,
               0    ,              /* exit data[]            */
               &rule_count,        /* rule array count       */
               pRule,              /* rule array[]           */
-              lData     ,         /* length of input data   */
-            * pData,              /* input data             */
+              &lData     ,        /* length of input data   */
+              pData,              /* input data             */
 
-              &i64,               /* priv key length,  */
-    (char *)  &KEK     ,          /*priv token[64]      */
+              &lKekName,          /*  kek name length  */
+              &KEKNAME[0],        /* kek name           */
 
-              &i64,               /* name to be stored           */
-    (char *) &KEY,               /* key name[]             */
 
-              &lOutput    ,       /* Imported key length    */
-              pOutput        );   /* Imported key           */
-// if( rc > 0)
-   printf("IMPCIP:CSNDSYI2 rc %i rs %i %s\n",rc,rs,csfgetrc(rs));
- if (rc != 0) return rc;
- // get rid of old input buffer
-   free (*pData);
-   *pData =  pOutput;
-   *lData = lOutput;
- return 0;
- }
+             &lKeyName,          /* name to be stored           */
+             &KEYNAME2[0],        /* key name[]             */
+
+             &lOutput2   ,       /* Imported key length    */
+              pOut           );   /* Imported key           */
+  if( rc > 0)
+  {
+    printf("IMPCIP:CSNDSYI2 rc %i rs %i %s\n",rc,rs,csfgetrc(rs));
+    return rc;
+  }
+//  printf("Length of outputlData   %i\n",lOutput2);
+  * lOut    = lOutput2;
+  return 0;
+}
  #endif

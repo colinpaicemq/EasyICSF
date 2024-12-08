@@ -1,34 +1,64 @@
+// find, and extract info about a CKDS key
 #ifndef Findkey_INCLUDE
 #define Findkey_INCLUDE
+/**************************************************************
+ MIT License
+ Copyright (c) 2024 Colin Paice
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+ The above copyright notice and this permission notice shall be included in all
+ copies or substantial portions of the Software.
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
+ * Contributors:
+ *   Colin Paice - Initial Contribution
+ ************************************************************/
 #include <exists.h>
+//  getkey  input label - output printed record and the KT
+/////////////////////////////////
 int findKey(char * which, char * key,
-    char ** pData, int * lData)
+    char  * pCert, int * lCert)
 {
+  if (debug > 0)
+  {
+    printf("==findKey %s %s\n",which,key);
+  }
   typedef char    char8[8];
-  char * pCert;
-  int lCert;
+//char * pCert;
+
+//int lCert = lCKDSRecord;
+//char cert[lCert      ];
   int rc;
  if (* which == 0 || * which ==' ' )  /* not specified */
  {
-   rc =   readKS("C",key,&pCert,&lCert);
+   rc =   readCKDS(key,pCert, lCert);
    if (rc == 0)
    {
-     *pData = pCert;
-     *lData = lCert;
+//   *pData = pCert;
+//   *lData = lCert;
      return 0;
    }
    else
    {
-     rc =   readKS("P",key,&pCert,&lCert);
+     rc =   readPKDS(key, pCert, lCert);
      if (rc == 0)
      {
-       *pData = pCert;
-       *lData = lCert;
+//     *pData = pCert;
+//     *lData = lCert;
        return 0;
      }
      else
      {
-       printf("Findkey: readks PKDS & CKDS  for %s rc %i\n",key,rc);
+       printf("Findkey: readks PKDS & CKDS  for %.64s rc %i\n",key,rc);
        return 8;
      }
    }
@@ -36,36 +66,60 @@ int findKey(char * which, char * key,
 else
  if (* which =='C' )
  {
-   rc =   readKS("C",key,&pCert,&lCert);
+   rc =   readCKDS(key, pCert, lCert);
    if (rc == 0)
      {
-       *pData = pCert;
-       *lData = lCert;
+//     *pData = pCert;
+//     *lData = lCert;
        return 0;
      }
    else
    {
-     printf("Findkey: readks CKDS for %s rc %i\n",key,rc);
+     printf("Findkey: readks CKDS for %.64s rc %i\n",key,rc);
      return 8;
    }
  }
  else
  if (*which =='P' )
  {
-   rc =   readKS("P",key,&pCert,&lCert);
+   rc =   readPKDS(key, pCert, lCert);
    if (rc == 0)
      {
-       *pData = pCert;
-       *lData = lCert;
+//     *pData = pCert;
+//     *lData = lCert;
        return 0;
      }
    else
    {
-     printf("Findkey: readks PKDS for %s rc %i\n",key,rc);
+     printf("Findkey: readkKDS for %.64s rc %i\n",key,rc);
      return 8;
    }
  }
- printf("Findkey: invalid +KDS passed in %s.\n",which);
+ printf("Findkey: invalid +KDS passed in %s.\n",*which);
  return 12;
+}
+//  check the key exists and print the information about the key
+// if pFile = 0 then nothing is printed
+//  pWhich = "P" for PKDS or "C" for CKDS
+keyTYPE getKey(char * pWhich, char * pKey,
+               char * before,char * after, FILE * pFile)
+{
+  keyTYPE kt;
+  kt.i = 0; // preset this
+  int lData = lCKDSRecord;
+//char * pData;
+  char data[lData];
+  int rc;
+  rc = findKey(pWhich,pKey,&data[0],&lData);
+  printf("findkey rc %i length%i\n",rc, lData);
+  if ( rc != 0)
+  {
+     printf("findKey return code %s %i\n",pKey,rc);
+     kt.b.ERROR = 1;
+     return kt;
+  }
+  kt  =  processKey(&data[0],lData,before,after,pFile);
+  fprintf(pFile ,"\n");  // and the end of line
+  return kt;
 }
  #endif

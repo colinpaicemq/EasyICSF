@@ -1,0 +1,125 @@
+// list the contents of a TKDS (Token)
+/**************************************************************
+MIT License
+Copyright (c) 2024 Colin Paice
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+* Contributors:
+*   Colin Paice - Initial Contribution
+************************************************************/
+#pragma comment(user,"Copyright Colin Paice 2024")
+ #pragma nosequence
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
+ #include <string.h>
+ #include <printhx.h>
+ // entry points
+ #include </usr/include/csfbext.h>
+ // pkcs11 constants
+// #include </usr/include/csnpdefs.h>
+ #include <csnpdefs.h>
+ int detail = 0;
+ #pragma runopts(POSIX(ON))
+ #include <gskcms.h>
+ #include <gskssl.h>
+ #include <X509TODN.h>
+// #define lST               1000
+ #include <tlist3.h>
+ #include <tlist4.h>
+int main(int argc, char * argv[])
+{
+   int rc = 0 ;
+   char handle[44];
+   memset(&handle[0],' ',44);
+   char * pToken  = 0  ;
+   char * pCertID = 0  ;
+
+   #include <listparm.h>
+   if (pToken != 0 )
+   // just do the one token
+   {
+     if (strlen(pToken)> 32)
+     {
+        printf("Token length > 32 %s.\n",pToken);
+        return 8;
+     }
+        printf("pToken %s.\n",pToken);
+        memcpy(&handle[0],pToken,strlen(pToken));
+        getToken(&handle[0],&searchTemplate[0],lST);
+     return 0;
+   }
+  //
+  // list all of the tokens
+  //
+       rc = -1;
+   int rs = -1;
+   int exit_data_length = 0 ;
+   char exit_data[1];
+   int rule_array_count = 1;
+   char rule_array[16];                // ignored
+   memcpy(&rule_array[0],"TOKEN  ",8);
+   #define LL 116
+   int lList = LL        ;
+   char output_list[LL];
+   int handle_count= 1;
+   int iLoop;
+   lST = 0; // needed for token
+   for (iLoop = 0;;            iLoop ++)
+   {
+     lList = LL        ;
+//   printf("before list length %d\n",lList);
+     CSFPTRL(
+         &rc,
+         &rs,
+         &exit_data_length,
+         &exit_data[0],
+         &handle[0],
+         &rule_array_count,
+         &rule_array[0],
+         &lST,
+         &searchTemplate[0],
+         &lList,
+         &handle_count,
+         &output_list[0]);
+//   printf("CSFPTRL Token  rc:%d rs:%d\n",rc,rs);
+     if (rc == 0  && rs == 0) break; // successful end
+     else
+     if (rc == 4  && rs == 3017) ;//  more data coming
+     else
+       printf("CSFPTRL Token  rc:%d rs:%d\n",rc,rs);
+     //  4/3017 means perhaps more data
+     if (lList != LL)
+     {
+        printf("%s internal error list is too small needs to be %d\n",
+                lList);
+        return 8;
+     }
+     if (rc >= 8) break;
+     int iLen = lList;
+     memcpy(&handle[0],&output_list[0],44);
+     if ( detail > 0)
+        getToken(&output_list[0],&searchTemplate[0],lST);
+     else
+     printf("Token:%44.44s.\n",&handle[0]);
+     memset(&handle[0],' ',44);
+     memcpy(&handle[0],&output_list[0],32);
+
+  }  // for
+    // printf("rc:%d rs:%d\n",rc,rs);
+   if ( rs == 3026) printf("Token is invalid \n");
+  return rc;
+}

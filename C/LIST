@@ -1,35 +1,208 @@
+// list the contents of a CKDS or a PKDS
+/**************************************************************
+MIT License
+Copyright (c) 2024 Colin Paice
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+* Contributors:
+*   Colin Paice - Initial Contribution
+************************************************************/
+//
+//  List the +KDS and format the records
+//  This code reads records from the PKDS/CKDS based on critia
+//  such as dates, or archived
+//  It displays the meta data (like create time) and information
+//  about the contents of the key token.
+//  The information is written to a dataset depending on the
+//  status, such as //CKDSA for Active records in the CKDS
+//
+#pragma comment(user,"Copyright Colin Paice 2024")
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+int debug = 0;
+typedef char    char8[8];
 #include <exists.h>
 #include <printhx.h>
 #include </usr/include/csfbext.h>
 #include <csfgetrc.h>  // colin special
-#include <printaes.h>  // colin special
-#include <printpki.h>  // colin special
-void listData(char which[8], char state[8],FILE *);
+#include <keytype.h>  // colin special
+#include <findkey.h>  // colin special
+#include <args2.h>  // colin special
+#include <time.h>
+void listData(char which[8], char state[8],FILE *,char * pSearch,
+     int lSearch,char * label);
 int  metaData(char type[8],char * label, FILE *);
 int printData(char *, char *, FILE *);
 typedef char    char8[8];
 
+FILE * fSUMMARY  =0;
 int main(int argc, char * argv[]) {
-FILE * fCKDSA    =fopen("dd:CKDSA"    ,"w"          );
-FILE * fCKDSI    =fopen("dd:CKDSI"    ,"w"          );
-FILE * fCKDSARCH =fopen("dd:CKDSARCH" ,"w"          );
-FILE * fPKDSA    =fopen("dd:PKDSA"    ,"w"          );
-FILE * fPKDSI    =fopen("dd:PKDSI"    ,"w"          );
-FILE * fKKDSARCH =fopen("dd:PKDSARCH" ,"w"          );
-  listData("CKDS    ","ACTIVE  ",  fCKDSA     );
-  listData("CKDS    ","INACTIVE",  fCKDSI   );
-  listData("CKDS    ","ARCHIVED",  fCKDSARCH);
-  listData("PKDS    ","ACTIVE  ",  fPKDSA   );
-  listData("PKDS    ","INACTIVE",  fPKDSI   );
-  listData("PKDS    ","ARCHIVED",  fKKDSARCH);
+// parse the parameters
+  int rc = 0;
+  char *days    = 0;
+  char *type    = 0;
+  char *status  = 0;
+  char *datetype= 0;
+  char *label   = 0;
+  char *help    = 0;
+  rc += readArgs( argc,argv,"-type",0,&type,"v");
+//rc += readArgs( argc,argv,"-status",0,&status,"v");
+  rc += readArgs( argc,argv,"-days",0,&days        ,"v");
+  rc += readArgs( argc,argv,"-datetype",0,&datetype,"v");
+  rc += readArgs( argc,argv,"-label",0,&label,"v");
+  rc += readArgs( argc,argv,"-help",0,&help,"");
+  char * pDebug= "";
+  rc += readArgs( argc,argv,"-debug",0 ,&pDebug,"v");
+
+  if (strlen(pDebug) > 0)
+  {
+    debug = atoi(pDebug);
+    printf("debug set %i\n",debug);
+  }
+  if (strcmp(help,"-help") == 0)
+  {
+  printf("Format <-type value> <-datetype value  -days value> "
+         " <-label value> <-help> \n"
+         "  where value is the name of a label to be listed\n");
+  printf("  -type value\n"
+         "   where value is C for CKDS, P for PKDS, T for TKDS\n");
+  printf("  -datetype value\n"
+         "   where value is c Created, u Updated, r Referenced "
+         "a for Archived, s for Start, e for End, x for Recalled\n");
+  printf("  -days n    \n"
+         "   where n is the number of days from now\n"
+         "   +n is greater than n days,-n is less than n days"
+         " and n is exactly n days\n");
+  printf("  -help\n"
+         "   this text\n");
+  }
+  if ( rc > 0)
+  {
+     printf("Problems with parameters \n");
+     return 12;
+  }
+  //
+  // now build the search criteria.
+  char search[500 ];
+  char *  pSearch;
+  pSearch = &search[0];
+  // end of seacrch string. This is used to check when we go off the end
+  char * pEsearch =pSearch + sizeof(search);
+  int x = 0;
+  // we need both or neither of data type and days
+  printf("#84 %i %i\n",strlen(datetype),strlen(days));
+  printf("#85:%s.%s.\n",datetype,days);
+  if (strlen(datetype) == 0 &&strlen(days)== 0)
+      ;  // every thing good.
+  else
+  if (!(strlen(datetype) != 0 && strlen(days) != 0))
+  {
+     printf("You must specify both or neither of datetype and days\n");
+     return 8;
+  }
+  else // good ...  we have both data
+  // we need to work out which date to select on
+  // and the days value.
+  // +days means greater than this number of days
+  // -days means less    than this number of days
+  //  days means equal to     this number of days
+  {
+    int daysHeader = 0x0001000e;
+    memcpy(pSearch,&daysHeader,4);// type days length 14
+    pSearch += 4;
+//  printf("datetype:%s\n",datetype);
+    char * pDateType = "";
+    switch (datetype[0]){
+      case 'c':*pSearch  = 0x01; pDateType = "Created";  break; // created
+      case 'u':*pSearch  = 0x02; pDateType = "Updated";  break; // updatsd
+      case 'r':*pSearch  = 0x03; pDateType = "Referenced"; break;
+      case 'a':*pSearch  = 0x04; pDateType = "Archived"; break; // archived
+      case 's':*pSearch  = 0x05; pDateType = "Start";    break; // start
+      case 'e':*pSearch  = 0x06; pDateType = "End";      break; // end
+      case 'x':*pSearch  = 0x07; pDateType = "Recalled"; break;
+      default:
+        printf("-datetype not recognised%s.\n",datetype);
+        return 8;
+    }
+    printf("Datetype:%s\n",pDateType);
+    //  calculate the number of days in the future
+    int lDays = atoi(days);
+    time_t tTime;
+    tTime = time(NULL);
+    tTime    = tTime    + lDays * ( 24*60*60); // seconds in a day
+    struct tm *timeptr;
+    timeptr = localtime(&tTime);
+    char fmtDate[9];
+    strftime(fmtDate,sizeof(fmtDate),"%Y%m%d",timeptr);
+    pSearch += 1 ;      // past the qualifier
+    // and set the qualifier for greater than, less than or equals to
+    if       (days[0] == '+' )
+    {
+             *pSearch     = 0x02;        // greater than
+       printf("Date older than %8.8s\n",fmtDate);
+    }
+    else  if (days[0] == '-'   )
+    {
+             *pSearch     = 0x01;        // less than
+       printf("Date less  than %8.8s\n",fmtDate);
+    }
+    else
+    {
+             *pSearch     = 0x03;        //  equal
+       printf("Date exactly  equal to  %8.8s\n",fmtDate);
+    }
+
+    pSearch ++ ;
+    memcpy(pSearch,&fmtDate,8);
+    pSearch  += 8 ;    // past it
+  }
+  int lSearch = pSearch -&search[0];
+  pSearch = &search[0];
+  FILE * fCKDSA    =fopen("dd:CKDSA"    ,"w");
+  FILE * fCKDSI    =fopen("dd:CKDSI"    ,"w");
+  FILE * fCKDSARCH =fopen("dd:CKDSARCH" ,"w");
+
+  FILE * fPKDSA    =fopen("dd:PKDSA"    ,"w");
+  FILE * fPKDSI    =fopen("dd:PKDSI"    ,"w");
+  FILE * fPKDSARCH =fopen("dd:PKDSARCH" ,"w");
+  fSUMMARY  =fopen("dd:SUMMARY"  ,"w"          );
+  listData("CKDS    ","ACTIVE  ",  fCKDSA   ,pSearch,lSearch,label);
+  listData("CKDS    ","INACTIVE",  fCKDSI   ,pSearch,lSearch,label);
+  listData("CKDS    ","ARCHIVED",  fCKDSARCH,pSearch,lSearch,label);
+
+  listData("PKDS    ","ACTIVE  ",  fPKDSA   ,pSearch,lSearch,label);
+  listData("PKDS    ","INACTIVE",  fPKDSI   ,pSearch,lSearch,label);
+  listData("PKDS    ","ARCHIVED",  fPKDSARCH,pSearch,lSearch,label);
+#ifdef no
+  FILE * fTKDSA    =fopen("dd:TKDSA"    ,"w");
+  FILE * fTKDSI    =fopen("dd:TKDSI"    ,"w");
+  FILE * fTKDSARCH =fopen("dd:TKDSARCH" ,"w");
+  listData("TKDS    ","ACTIVE  ",  fTKDSA   ,pSearch,lSearch);
+  listData("TKDS    ","INACTIVE",  fTKDSI   ,pSearch,lSearch);
+  listData("TKDS    ","ARCHIVED",  fTKDSARCH,pSearch,lSearch);
+  #endif
 }
-void listData(char which[8], char state[8],FILE * pF)
+void listData(char which[8], char state[8],FILE * pF,
+    char * pSearch,int lSearch , char * label)
 {
   int rc;
   int rs;
+  // set the labl
+  int lLabel = strlen(label);
   #define RULECOUNT 3
   int     ruleCount= RULECOUNT;
   char8 rule[RULECOUNT] ;
@@ -44,19 +217,22 @@ void listData(char which[8], char state[8],FILE * pF)
   memset(&continuation,0,sizeof(continuation));
   int myrc;
   int zero = 0;
+  // we loop around getting multiple records  rcs = 3303 means more
+  // data available.
+  printf("Now doing %s %s\n",which,state);
   while(1)
   {
-  CSFKDSL (
+    CSFKDSL (
          &rc  ,                   /* return code                   */
          &rs  ,                   /* reason code                   */
          &zero,                   /* exit data length              */
          0              ,         /* exit data[]                   */
          &ruleCount,              /* rule array count              */
          (unsigned char* )  &rule,/* rule array[]                  */
-         &zero,                   /* label filter length           */
-         0              ,         /* label filter[]                */
-         &zero,                   /* search criteria length        */
-         0              ,         /* search criteria[]             */
+         &lLabel,                 /* label filter length           */
+         label,                   /* label filter[]                */
+         &lSearch,                /* search criteria length        */
+          pSearch,                /* search criteria[]             */
          &label_count   ,         /* label count                   */
          &output_list_length,     /* output list length            */
          output_list,             /* output list[]                 */
@@ -65,20 +241,26 @@ void listData(char which[8], char state[8],FILE * pF)
          &zero ,                  /* reserved2 length              */
          0              ,         /* reserved2[]                   */
          &continuation[0] );      /* continuation area[]           */
+//    printf("CSFKDSL rc %i rs %i\n",rc,rs);
+//    if (rc > 0)      return;
       char * p;
       p =  &output_list[0];
-      int s = output_list_length/112 ;
+      int s = output_list_length/112 ;   // returned data length
       int i;
       for (i = 0; i< s;i++){
-         fprintf(pF,"%4.4s %8.8s %.64s %.8s %.8s %.8s %.8s %.8s %.8s\n",
-                 which,state,p,p+64,p+72,p+80,p+88,p+96,p+104);
+         fprintf(pF,"%4.4s %8.8s %.64s %.8s "     // . .  keytype
+                    "%.8s cr:%.8s %.2s:%.2s up: %.8s %.2s:%.2s\n",
+                 // encr           d     t  up       d     t
+                 which,state,p,p+64,p+72,
+                 p+80,p+88,p+90,p+96,p+104,p+106);   // dates
          metaData(which, p,pF);
          printData(which,p,pF);
+         // and the next one
          p+= 112 ;
       }
       if ( rc == 4 && rs == 3303) continue;
       break;
-}
+  }
 return     ;
 }
 //
@@ -95,11 +277,11 @@ return     ;
 // metaDataDetail
 //
 int  metaDataDetail(char type[8],
-                   char * label,
-                   md   * metaData,  // which type to get
-                   char * output,
-                   int * lOutput,
-                   FILE * pF)
+                    char * label,
+                    md   * metaData,  // which type to get
+                    char * output,
+                    int * lOutput,
+                    FILE * pF)
 {
   int rc;
   int rs;
@@ -125,7 +307,7 @@ int  metaDataDetail(char type[8],
            &zero,                   /* reserved2 length              */
            0              );        /* reserved2[]                   */
     if (rc != 0)
-      fprintf(pF,"CSFKDMR rc %i rs %i \n",rc,rs );
+      fprintf(pF,"CSFKDMR rc %i rs %i %s\n",rc,rs,csfgetrc(rs));
     if (rc == 4 &&  rs == 3302)
       fprintf(pF,"Database %8.8s is not in kdsr format rs 3302\n",type);
     return rc;
@@ -156,28 +338,33 @@ int  metaData(char type[8],char * label,FILE * pF)
     short flag;
   } fOutput;
   int rc;
-  md  create = {4,2,0,"Create"};
-  md mdlist[] = {{6, 1,1,"Installation date"},
+//md  create = {4,2,0,"Create"};
+  //  md    length, value, meta data, label
+  // the info in this table is passed to CSFKDMR
+  // see table 503 page 1245
+  md mdlist[] = {{6, 1,1,"Installation days"},
                  {6, 1,2,"Service for reference"},
-                 {6, 1,3,"Archive date"},
-                 {6, 1,4,"Recall date"},
+                 {6, 1,3,"Archive days"},
+                 {6, 1,4,"Recall days"},
                  {6, 1,5,"Fingerprint"},
                  {6, 1,6,"Retained key info"},
-                 {4, 2,0,"Record create date"},
-                 {4, 3,0,"Record update date"},
-                 {4, 4,0,"Key validity start date"},
-                 {4, 5,0,"Key validity end date"},
-                 {4, 6,0,"Last reference date"},
-                 {4, 7,0,"Last reference date stck"},
-                 {4, 8,0,"Archive date"},
+                 {6, 1,8,"Last used class reference"},
+                 {4, 2,0,"Record create days"},
+                 {4, 3,0,"Record updays days"},
+                 {4, 4,0,"Key validity start days"},
+                 {4, 5,0,"Key validity end days"},
+                 {4, 6,0,"Last reference days"},
+                 {4, 7,0,"Last reference days stck"},
+                 {4, 8,0,"Archive days"},
                  {4, 9,0,"Record Archive"},
                  {4,10,0,"Prohibit Archive"},
-                 {4,11,0,"Recall date"}
+                 {4,11,0,"Recall days"}
                 };
   int loop = sizeof(mdlist)/sizeof(mdlist[0]);
   int i;
   for (i = 0;i<loop;i++)
   {
+    //  get for each one in turn
     lOutput = sizeof(output); // reset this back
     rc=  metaDataDetail(type,
                         label,
@@ -190,46 +377,45 @@ int  metaData(char type[8],char * label,FILE * pF)
     mdOutput * m;
     fOutput  * f;
     char * flag;
-    p = ( sOutput *)&output[0];
+    p = ( sOutput  *)&output[0];
     m = ( mdOutput *)&output[0];
-    f = (  fOutput *)&output[0];
+    f = ( fOutput  *)&output[0];
     char * d;
- int cc = p-> type;
+    int cc = p-> type;
+    // offset 4 - tag eg Installation data
     switch(p-> type)
     {
-    case 1:
+    case 1:   // Installation user date
       d = &m->data[0];
       int l = m-> mdl;
- //   printf("Md len %i tag %hd\n",l,m-> tag);
- //   if ( p->data[0] != 0)
       if ( l > 0)
       fprintf(pF,"              "
              "%-30s %*.*s\n",
           mdlist[i].label,l,l,d);
       break;
-    case 2:
-    case 3:
+    case 2:   // Service for reference.
+    case 3:   // Record archive dat
       d = &p->data[0];
       if ( p->data[0] != 0)
       fprintf(pF,"              "
              "%-30s %.4s/%.2s/%.2s %.2s:%.2s:%.2s.%.2s\n",
           mdlist[i].label,d,d+4,d+6,d+8,d+11,d+13,d+15);
       break;
-    case 4:
-    case 5:
-    case 6:
-    case 8:
-    case 11:
+    case 4: //Record recall date
+    case 5: // Key material validity end date
+    case 6: // Last reference date
+    case 8: // Record archive date
+    case 11:  // Record recall date.
       if ( p->data[0] != 0)
       fprintf(pF,"              "
              "%-30s %.4s/%.2s/%.2s\n",
           mdlist[i].label,d,d+4,d+6);
       break;
       //  now the flags
-    case  9:
-    case 10:
-      if (f->flag == 00) flag = "disabled";
-      else flag = "enabled";
+    case  9:  // Record archive flag
+    case 10:  // Record prohibit archive flag
+      if (f->flag == 00) flag = "no";
+      else flag = "yes";
       fprintf(pF,"              "
              "%-30s %s\n",
           mdlist[i].label,flag);
@@ -241,20 +427,40 @@ int  metaData(char type[8],char * label,FILE * pF)
 int printData(char * pWhich, char * pKey,FILE * pF)
 {
    int rc;
-   char * pData;
-   int lData;
-   rc =readKS(pWhich ,pKey,&pData  , &lData);
-   if (rc != 0) return rc;
-   if (*pData+4  ==  0x05)
-      printAES(pData,lData,pF);
-   else if (*pData+0  ==  0x1f) // internal
-      printPKI(pData,lData,pF);
-   else if (*pData+0  ==  0x1E)  // external
-      printPKI(pData,lData,pF);
-   else
+   keyTYPE kt;
+// char * pData;
+   int lData = lCKDSRecord;
+   char data[lData];
+   fprintf(pF,"Key:%.64s\n",pKey);
+   pKeyLabel = pKey;
+   if (pWhich[0] == 'C' )
    {
-    fprintf(pF,"Unrecognised record type\n");
-   printHex(pF    ,pData,lData  );
+     rc =readCKDS(pKey,&data[0], &lData);
+     if (rc != 0) return rc;
+     if (debug >= 12)
+        {
+           fprintf(pF,"Hex dump of record read\n");
+           printHex(pF,&data[0] , lData);
+        }
+     // display it all
+     kt  =    processKey(&data[0], lData,  "", ",", pF   );
+     fprintf(pF,"\n");  // and the end of line
    }
+   else
+   if (pWhich[0] == 'P' )
+   {
+     rc =readPKDS(pKey,&data[0], &lData);
+     if (rc != 0) return rc;
+     if (debug >= 12)
+        {
+           fprintf(pF,"Hex dump of record read\n");
+           printHex(pF,&data[0] , lData);
+        }
+     // display it all
+     kt  =    processKey(&data[0], lData,  "", ",", pF   );
+     fprintf(pF,"\n");  // and the end of line
+   }
+   else
+     printf("Unknown type %s\n",pWhich);
    return 0;
 }

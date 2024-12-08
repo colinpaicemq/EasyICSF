@@ -1,0 +1,154 @@
+// generate a symmetric key
+#ifndef GENAESIE_INCLUDE
+#define GENAESIE_INCLUDE
+/**************************************************************
+ MIT License
+ Copyright (c) 2024 Colin Paice
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+ The above copyright notice and this permission notice shall be included in all
+ copies or substantial portions of the Software.
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
+ * Contributors:
+ *   Colin Paice - Initial Contribution
+ ************************************************************/
+#include <do64.h>
+#include <keytype.h>  // colin special
+#include <time.h>
+//  CSNBKGN2
+// on input it points to a skeleton
+// on exit it points to the token
+// same buffer is used
+//  No transport key is used, so it can only support OP
+//  To use type IM or EX you need to specify the transport KEY
+//
+int GENAESIE( char * pOPRule,char * pData1, int * lData1 ,
+                             char * pData2, int * lData2 ,
+             char * pKek)
+{
+  if (debug >0)
+     printf("=========================GENKAESIO======\n");
+  char * kn = "COLINKEY";
+  int lKN = 0;
+  if (strlen(pKeyname) > 0)
+    lKN = 64;
+  do64(KN,pKeyname); // copy it - or use blanks
+  int rc;
+  int rs;
+  int l64 = 64;
+  int zero = 0;
+  int rule_count =  2;
+  //  generate the user data .. include the data and time.
+  int lUser1 = 21;
+  char user1[lUser1];
+  int lUser2= 21;
+  char user2[lUser2];
+  user1[0] = '1';
+  user2[0] = '2';
+  time_t temp;
+  struct tm *timeptr;
+  temp = time(NULL);
+  timeptr = localtime(&temp);
+  strftime(&user1[1],sizeof(user1)-2," %Y/%m/%d %T",timeptr);
+  memcpy(&user2[0],&user1[0],lUser1);
+  user1[0] = '1'; //  the first  one
+  user2[0] = '2'; //  the second one
+  strftime(&user2[1],sizeof(user1)-2," %Y/%m/%d %T",timeptr);
+
+  // make the name of the Kek 64 chars long padded with blanks
+  int lKekName;
+  lKekName = strlen(pKek);
+  do64(KEK,pKek);
+
+  int keyBitLength = 256 ;// AES 256 - why use any other?
+
+  printf("GENAESIE:rule:%s/\n",pOPRule);
+  // always use a token
+  char *pzkeyType1 = "TOKEN  ";
+  char *pzkeyType2 ;
+  if (*lData2  == 0)  //  just one token specified
+  {
+      pzkeyType2 = "       ";
+  }
+  else
+      pzkeyType2 = "TOKEN  ";
+  if (lKekName > 0)
+     lKekName = 64;
+
+  // check the rule has length divisible by 8.
+  rule_count  = strlen(pOPRule)/8;
+  if ( 8 * rule_count != strlen(pOPRule))
+  {
+    printf("invalid opOPRule - needs to be a multiple of 8.%s.\n",pOPRule);
+    return 8;
+  }
+//printf("KEYFORM %16.16s/%i\n",pOPRule,rule_count );
+  if (keyBitLength !=256)
+     printf("Key length should be 256 %i\n", keyBitLength);
+  processKey(pData1,*lData1,"","",stdout);
+  if ( debug > 0)
+  {
+    printf("ldata1:%i ldata2:%i\n",*lData1, * lData2);
+    printf("lKN1  %i\n",lKN);
+    if (lKN  > 0)
+       printf("Keyname in record:%64.64s.\n",KN );
+    printf("luser  1: %i 2: %i\n",lUser1,lUser2);
+    printf("lkey      %i   \n",lKekName);
+  }
+  CSNBKGN2(
+          &rc  ,                   /* return code         */
+          &rs  ,                   /* reason code         */
+          0,  // &zero,            /* exit data length   0*/
+          0,                       /* exit data[]        0*/
+          &rule_count,             /* rule array count    ! */
+          pOPRule,                 /* rule array[]        ! */
+          &keyBitLength,  //  256  /* clear key bit length! */
+          pzkeyType1  ,            /* key type1[8]        ! */
+          pzkeyType2  ,            /* key type2[8]        ! */
+          &lKN ,     // 0 or 64     /* key name1 length     0*/
+          &KN[0],                   /* key name1[64]        0*/
+          &lKN ,    // 0 or 64      /* key name2 length     0*/
+          &KN[0],                   /* key name2[64]        0*/
+
+          &lUser1,
+          &user1[0],
+          &lUser2,
+          &user2[0],
+
+          // the first value OP, does not have a KEK
+          // so it has a zero length
+          0, //  &zero,           /* KEK id1 length          0*/
+          0,                      /* KEK id1[]               0*/
+          // if a two object request eg OPEX then you need a KEK
+          // so give it the length and the name
+          &lKekName,              /* KEK id2 length          0*/
+          &KEK[0],                /* KEK id2[]               0*/
+  // following are key generator key identifier
+  // input is the skeleton
+          lData1,                 /*&generated  id1 length !  */
+          pData1,                 /* generated  id1[]      !   */
+          lData2,                 /*&output key id2 length !  */
+          pData2     );           /* output key id2[]      !  */
+//printf("Keytype1/2 %8.8s.%8.8s.\n",pzkeyType1,pzkeyType2);
+//printf("KEYFORM %16.16s %i.\n",pOPRule,rule_count );
+  printf("GENAESIE:CSNBKGN2 rc %i rs %i %s\n",rc,rs,csfgetrc(rs));
+  if ( rc > 0)
+  {
+//  printf("GENAESIE:CSNBKGN2 rc %i rs %i %s\n",rc,rs,csfgetrc(rs));
+    return rc;
+    printf("pData1 after \n");
+    printHex(stdout,pData1,16);
+  }
+  return rc;
+}
+#endif

@@ -1,114 +1,86 @@
+// code to read the CKDS and report if it exists or not
 #ifndef exists_INCLUDE
 #define exists_INCLUDE
+/**************************************************************
+ MIT License
+ Copyright (c) 2024 Colin Paice
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+ The above copyright notice and this permission notice shall be included in all
+ copies or substantial portions of the Software.
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
+ * Contributors:
+ *   Colin Paice - Initial Contribution
+ ************************************************************/
 #include <csfgetrc.h>  // colin special
 #include <do64.h>  // colin special
-int findBlank(char * p)
+int readCKDS(char * label, char * pCert, int * lCert)
 {
-  int i;
-  for (i = 0;i< 64;i++)
+  if ( debug > 0)
   {
-    if (p[i]  == ' ') break;
+    printf("readCKDS name %s\n",label);
   }
-  return i;
-}
-int readKS( char * which,  char * label, char ** pCert, int * lCert);
-int doExists( char * which,  char * labin)
-{
-  int rc ;
-  char * pCert ;
-  int lCert ;
-  rc =   readKS(which,labin,&pCert,&lCert);
-  free (pCert);
-//printf("exists rc %i\n",rc);
-  return rc;
-}
-int readKS( char * which,  char * label, char ** pCert, int * lCert)
-{
   int rc;
   int rs;
   int zero = 0;
   int lToken = 6500;
-  char * pToken;
   do64(Lab,label);
-  pToken = (char *) malloc(lToken);
-  * pCert = pToken;
-  if ( pToken == NULL)
-  {
-     printf("unable to allocate storage in exists\n");
-     return 12;
-  }
-//printf("doExists store=%1.1s key=%s\n",which,label);
-  if (which[0] == 'C')
-  {
-  rc=   CSNBKRR2(
-             &rc  ,                   /* return code              */
-             &rs,                     /* reason code              */
-             &zero,                   /* exit data length         */
-             0,                       /* exit data[]              */
-             &zero,                   /* rule array count         */
-             0,                       /* rule array[]             */
-  (char * )  &Lab,                    /* key label[64]             */
-            &lToken,                  /* key token length   */
-  (char *)  pToken
-                            );/* key token[]                   */
-//int l;
-//printf("LABEL %s.\n",label);
-//l = findBlank(label);
-//if ( rc > 0)
-    printf("Exists: CSNBKRR2 read %s CKDS rc %i rs %i %s\n",
-            label,rc,rs,csfgetrc(rs));
-  *lCert = lToken;
-//  printHex(stdout,pToken,lToken);
-  return rc;
-  }
-  else
-  if (which[0] ==  'P')
-  {
-  rc= CSNDKRR(
-             &rc  ,                   /* return code              */
-             &rs,                     /* reason code              */
-             &zero,                   /* exit data length         */
-             0,                       /* exit data[]              */
-             &zero,                   /* rule array count         */
-             0,                       /* rule array[]             */
-  (char *)   &Lab,                    /* key label[64]             */
-             &lToken,                  /* key token length   */
-  (char *)   pToken
-                            );/* key token[]                   */
-//int l;
-//l = findBlank(label);
-//if ( rc > 0)
-  printf("Exists: CSNDKRR  read %s PKDS rc %i rs %i %s %s.\n",
-            label, rc,rs,csfgetrc(rs));
-  *lCert = lToken;
-//printHex(stdout,pToken,lToken);
-  return rc;
-  }
-  else
-    {
-      printf("Invalid type passed to Add %s\n",which );
-      return 8;
-    }
+  rc=CSNBKRR2(
+               &rc  ,                   /* return code              */
+               &rs,                     /* reason code              */
+               &zero,                   /* exit data length         */
+               0,                       /* exit data[]              */
+               &zero,                   /* rule array count         */
+               0,                       /* rule array[]             */
+               &Lab[0],                 /* key label[64]             */
+               lCert ,                  /* key token length   */
+               pCert
+                              );/* key token[]                   */
+    if ( debug > 0 || rc > 0 )
+      fprintf(stderr,"Exists: CSNBKRR2 read %64.64s CKDS rc %i rs %i %s\n",
+              Lab,rc,rs,csfgetrc(rs));
+    if (debug > 0)
+       printf("readCKDS returned length %i\n",*lCert);
+    return rc;
 }
-int checkExistsDelete(char * which,  char * labin, char * delete)
+
+int readPKDS(char * label, char * pCert, int * lCert)
 {
-  int exists;
-  exists = doExists(which,labin);
-  if ( exists ==  0 )
+  if ( debug > 0)
   {
-    // Check to see if delete specified
-    if (strcmp(delete,"-delete")!=0)
-    {
-      printf("Key %-64.64s exists and -delete not specified\n");
-      exists = 8;
-    }
+    printf("readPKDS name %s\n",label);
   }
-  return exists;
+  int rc;
+  int rs;
+  int zero = 0;
+  do64(Lab,label);
+  rc=CSNDKRR2(
+               &rc  ,                   /* return code              */
+               &rs,                     /* reason code              */
+               &zero,                   /* exit data length         */
+               0,                       /* exit data[]              */
+               &zero,                   /* rule array count         */
+               0,                       /* rule array[]             */
+               &Lab[0],                 /* key label[64]             */
+               lCert,                   /* key token length   */
+               pCert
+                              );/* key token[]                   */
+    if ( debug > 0 || rc > 0 )
+    fprintf(stderr,"Exists: CSNDKRR2 read %64.64s PKDS rc %i rs %i %s %s.\n",
+              Lab, rc,rs,csfgetrc(rs));
+    if (debug > 0)
+       printf("readPKDS returned length %i\n",*lCert);
+    return rc;
 }
-int existsP(char * key){
-return doExists("P", key);
-}
-int existsC(char * key){
-return doExists("C", key);
-}
+
 #endif

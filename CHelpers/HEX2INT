@@ -1,0 +1,76 @@
+// parse an input hex string and return it in internal format
+/**************************************************************
+ MIT License
+ Copyright (c) 2024 Colin Paice
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+ The above copyright notice and this permission notice shall be included in all
+ copies or substantial portions of the Software.
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
+ * Contributors:
+ *   Colin Paice - Initial Contribution
+ ************************************************************/
+//  hex2int - take a hex string in format 01234678,9abcdef,012345678,9abcdef
+//  to a hex string -
+//  input pHex string
+//  output char[16];
+//  the string is parsed into comma separated fields
+//  the length is checked so under 8chars
+//  use str to unsigned long to convert string to base 16
+//
+int subhex(char ** pHex,unsigned int * pH)
+{
+  char * token;
+  char * t= * pHex;
+  unsigned long int x;
+  token = strtok(t   , ","); // Search for comman delmited
+  if (strlen(token) == 0 )
+    return 8;
+  if (strlen(token) > 8)
+     {
+       printf("Invalid hex string a)%s\n",pHex);
+       return 8;
+     }
+  x    = strtoul(token,&token,16);
+  if ( errno != 0 )
+  {
+    perror("problem processing hex string");
+    return 8;
+  }
+  if (  * token != 0x00)
+  {
+       printf("Invalid hex string b) %s\n",pHex);
+       return 8;
+  }
+  * pH = x;
+  * pHex = token;
+  return 0;
+}
+int hexStringToHex(char * pHex, unsigned int * pH  )
+{
+  char * p = pHex;    // we iterate over this
+  int lHex = strlen(pHex);
+  char * pEndHex = p + lHex;
+  int rc;
+  int i;
+  for (i = 0; i< 3; i++)
+  {
+     rc = subhex(&p,pH+i); // return it into the 4 fields
+     if (rc!= 0) return rc;
+     p ++; // past the null
+     if (p > pEndHex) break;
+  }
+  if ( i == 3) // the number we were expecting
+     return 0;
+  else return 8;
+}

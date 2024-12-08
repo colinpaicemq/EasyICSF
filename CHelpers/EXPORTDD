@@ -1,5 +1,27 @@
+// export to a data set
 #ifndef exportdd_INCLUDE
 #define exportdd_INCLUDE
+/**************************************************************
+ MIT License
+ Copyright (c) 2024 Colin Paice
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+ The above copyright notice and this permission notice shall be included in all
+ copies or substantial portions of the Software.
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
+ * Contributors:
+ *   Colin Paice - Initial Contribution
+ ************************************************************/
   /*Include standard libraries */
 #define _OPEN_SYS
 #include <base64en>  // colin special
@@ -17,16 +39,16 @@ int exportDD(char * dd, char * pData, int lData)
      printf("Error opening %s\n",mydd);
      return 8;
    }
+   //HEREIAM
    unsigned int lEncoding;
    char * pEncoding =
          base64_encode(pData,
                        lData,
                        &lEncoding);
-   printf("B64 encoding in length %i out %i",lData,lEncoding);
-
-  int zz;
-  memcpy(&zz,pEncoding,4);
-  printf(" based 64encoding %8.8x\n",zz);
+//int zz;
+//memcpy(&zz,pEncoding,4);
+//printf(" based 64encoding %8.8x\n",zz);
+   //HEREIAM
   long i;
   char * pB        = pEncoding;
   int remainder;
@@ -34,11 +56,13 @@ int exportDD(char * dd, char * pData, int lData)
   // do it in blocks of 64 except last
   for (i = 0;; i++ )
   {
+   //HEREIAM
     if(remainder < 64) break;
     fwrite(pB,1,64,fCert);
     remainder -= 64;
     pB += 64;
   }
+   //HEREIAM
   if ( remainder > 0)
      fwrite(pB,1,remainder,fCert);
   fclose(fCert);

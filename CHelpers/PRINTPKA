@@ -1,0 +1,204 @@
+// print key information
+#ifndef PRINTPKA_INCLUDE
+#define PRINTPKA_INCLUDE
+/**************************************************************
+ MIT License
+ Copyright (c) 2024 Colin Paice
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+ The above copyright notice and this permission notice shall be included in all
+ copies or substantial portions of the Software.
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
+ * Contributors:
+ *   Colin Paice - Initial Contribution
+ ************************************************************/
+// apg pages 1376 table 588  etc
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <string.h>
+char * lookupPKASection(char    t)
+{
+  typedef struct list
+   {
+     char c;
+     char * reason;
+   } list;
+   list  pList[] =
+   { {0x02,"RSA private key, modulus-exponent format (RSA-PRIV"},
+     {0x04,"RSA public key"},
+     {0x08,"RSA private key, Chinese Remainder T format (RSA-CRT)"},
+     {0x10,"RSA private key name"},
+     {0x20,"ECC private key"},
+     {0x21,"ECC public key"},
+     {0x23,"ECC Key-derivation information"},
+     {0x30,"RSA private key, ME format with AES encrypted OPK"},
+     {0x31,"RSA private key, CRT format with AES encrypted OPK"}
+   };
+   int i;
+   int size = sizeof(pList)/sizeof(pList[1]);
+   for (i = 0;i < size;i++)
+   {
+     if(pList[i].c ==t) return pList[i].reason ;
+   }
+   return "Unknown" ;
+}
+keyTYPE printPKA( char * p,int lIn,FILE * f)
+{
+//printf("Compiled %s %s %s.\n",__FILE__,__DATE__, __TIME__);
+// fprintf(f,"Dump of print PKA record \n");
+// printHex(f,p,lIn);
+  char * q;
+
+  keyTYPE kt; //  preset this.
+  kt.i = 0;
+  char * qend;
+  short * hL;
+  q = p;
+  hL  =  (short *)&q[2];
+  int iL  = * hL;
+  qend = q+lIn;
+  int z;
+  switch (q[0])
+  {
+    case  0x00:
+      fprintf(f ,"      Null token\n");
+      kt.b.tNULL = 1;
+      break;
+    case  0x1E:
+      fprintf(f ,"      External token\n");
+      kt.b.EXTERNAL  = 1;
+      break;
+    case  0x1F:
+      fprintf(f ,"      Internal token\n");
+      kt.b.INTERNAL  = 1;
+      break;
+    default:
+      z = q[0];  // print out the value
+      fprintf(f ,"Unrecognised token %x\n",z);
+  }
+//fprintf(f,"Header\n");
+//printHex(f     ,q,8);
+  q+= 8; // past the header
+  int i;
+  short   sh;
+  for (i=0;;i++)
+  {
+    if ( q >=qend) return kt;
+    hL  =  (short *)&q[2];
+    iL  = * hL;
+    fprintf(f,"  PKA block %s\n",lookupPKASection(*q));
+    if ( *q ==0x20)  // private
+    {
+      fprintf(f ,"  ECC Private key\n");
+      switch(q[4])
+      {
+        case 0x00:
+           fprintf(f,"  Section is unencrypted\n");
+           break;
+        case 0x01:
+           fprintf(f,"  CBC Wrap-other\n");
+           break;
+      }
+       switch(q[5])
+       {
+          case 0x01:
+             fprintf(f,"  SHA224\n");
+             break;
+          case 0x02:
+             fprintf(f,"  SHA256\n");
+             break;
+       }
+
+       switch(q[9])
+       {
+         case 0x00 : fprintf(f,"  Prime Curve\n");   break;
+         case 0x01 : fprintf(f,"  Brainpool curve\n"); break;
+         case 0x02 : fprintf(f,"  Edwardsl curve\n");  break;
+         case 0x03 : fprintf(f,"  Koblitz curve\n"); break;
+       }
+  //    short s
+        memcpy(&sh,q+12,2);  // save value as a short
+        switch(sh)
+        {
+           case 0x00c0: fprintf(f,"  192\n");  break;
+           case 0x00e0 : fprintf(f,"  224\n");  break;
+           case 0x00ff : fprintf(f,"  25519\n");   break;
+           case 0x0100 : fprintf(f,"  256\n");      break;
+           case 0x0140 : fprintf(f,"  320\n");     break;
+           case 0x0180 : fprintf(f,"  384\n");     break;
+           case 0x01c0 : fprintf(f,"  444\n");      break;
+      }
+    }
+    /////////////////////////////////////////////////
+    if ( q[0]  ==0x21) // public
+    {
+      fprintf(f ,"    ECC Public key\n");
+      switch(q[8])
+      {
+        case 0x00 : fprintf(f,"  Prime Curve\n");
+          kt.b.PRIME = 1;
+          break;
+        case 0x01 : fprintf(f,"  Brainpool curve\n");
+          kt.b.BRAINPOOL = 1;
+          break;
+        case 0x02 : fprintf(f,"  Edwards curve\n");
+          kt.b.EDWARDS   = 1;
+          break;
+        case 0x03 : fprintf(f,"  Koblenz curve\n");
+          kt.b.KOBLENZ   = 1;
+          break;
+      }
+      memcpy(&sh,q+10,2);  // save value as a short
+      switch(sh)
+      {
+         case 0x00c0 : fprintf(f,"  192\n");    break;
+         case 0x00e0 : fprintf(f,"  224\n");    break;
+         case 0x00ff : fprintf(f,"  25519\n");  break;
+         case 0x0100 : fprintf(f,"  256\n");    break;
+         case 0x0140 : fprintf(f,"  320\n");    break;
+         case 0x0180 : fprintf(f,"  384\n");    break;
+         case 0x01c0 : fprintf(f,"  444\n");    break;
+      }
+      kt.b.length = sh;
+      int ish =   sh;
+      fprintf(f,"  Length of public key %i\n",ish );
+    }
+    if (q[0]==0x31) // chinese remainder theorem
+    {
+      fprintf(f ,"RSA private 4096 ChiRremTh  AES-Enc OPK\n");
+      switch(q[14])
+      {
+        case 0x00 : fprintf(f,"  Clear key\n");       break;
+        case 0x01 : fprintf(f,"  CBC Wrap- other\n"); break;
+        case 0x02 : fprintf(f,"  SHA -256\n");        break;
+      }
+      switch(q[51])
+      {
+        case 0x00 : fprintf(f,"  No format restriction\n");
+        case 0x01 : fprintf(f,"  ISO-9796\n");
+        case 0x02 : fprintf(f,"  PKCS-1.0\n");
+        case 0x03 : fprintf(f,"  PKCS-1.1\n");
+        case 0x04 : fprintf(f,"  PKCS-PSS\n");
+        case 0x05 : fprintf(f,"  X9.31\n");
+        case 0x06 : fprintf(f,"  Zero Pad\n");
+
+      } // end switch
+    }   // end public
+    // print out the key in hex
+//  printHex(f,q,iL);
+    q += iL; // past the block
+  }
+  return kt;
+}
+#endif

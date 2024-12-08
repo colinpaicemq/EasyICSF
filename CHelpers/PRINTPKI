@@ -1,6 +1,28 @@
+// print key info
 #ifndef PRINTPKI_INCLUDE
 #define PRINTPKI_INCLUDE
 // apg pages 1376 table 588  etc
+/**************************************************************
+ MIT License
+ Copyright (c) 2024 Colin Paice
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+ The above copyright notice and this permission notice shall be included in all
+ copies or substantial portions of the Software.
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
+ * Contributors:
+ *   Colin Paice - Initial Contribution
+ ************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -33,6 +55,9 @@ char * lookupPKISection(char    t)
 }
 int printPKI( char * p,int lIn,FILE * f)
 {
+//printf("Compiled %s %s %s.\n",__FILE__,__DATE__, __TIME__);
+// fprintf(f,"Dump of print PKI record \n");
+// printHex(f,p,lIn);
   char * q;
   char * qend;
   short * hL;
@@ -44,13 +69,13 @@ int printPKI( char * p,int lIn,FILE * f)
   switch (q[0])
   {
     case  0x00:
-      fprintf(f ,"Null token\n");
+      fprintf(f ,"      Null token\n");
       break;
     case  0x1E:
-      fprintf(f ,"External token\n");
+      fprintf(f ,"      External token\n");
       break;
     case  0x1F:
-      fprintf(f ,"Internal token\n");
+      fprintf(f ,"      Internal token\n");
       break;
     default:
       z = q[0];  // print out the value
@@ -66,12 +91,12 @@ int printPKI( char * p,int lIn,FILE * f)
     if ( q >=qend) return 0;
     hL  =  (short *)&q[2];
     iL  = * hL;
-    fprintf(f,"PKI block %s\n",lookupPKISection(*q));
+    fprintf(f,"  PKI block %s\n",lookupPKISection(*q));
     if ( *q ==0x20)  // private
     {
-      fprintf(f ,"ECC Private key\n");
+      fprintf(f ,"  ECC Private key\n");
            if ( *(q+4)  ==0x00) fprintf(f,"  Section is unencrypted\n");
-      else if ( *(q+4)  ==0x01) fprintf(f,"  CBC Wrap- other\n");
+      else if ( *(q+4)  ==0x01) fprintf(f,"  CBC Wrap-other\n");
 
            if ( *(q+5) ==0x01)  fprintf(f,"  SHA224\n");
       else if ( *(q+5)  ==0x02) fprintf(f,"  SHA256\n");
@@ -91,7 +116,7 @@ int printPKI( char * p,int lIn,FILE * f)
     }
     if ( *q ==0x21) // public
     {
-      fprintf(f ,"ECC Public key\n");
+      fprintf(f ,"    ECC Public key\n");
            if ( *(q+8)  ==0x00) fprintf(f,"  Prime Curve\n");
       else if ( *(q+8)  ==0x01) fprintf(f,"  Brainpool curve\n");
       else if ( *(q+8)  ==0x02) fprintf(f,"  Edwardsl curve\n");
@@ -106,7 +131,7 @@ int printPKI( char * p,int lIn,FILE * f)
       else if (*sh      ==0x01c0) fprintf(f,"  444\n");
       sh = (short *) (q+12);
       int ish = * sh;
-      fprintf(f,"Length of public key %i\n",ish );
+      fprintf(f,"  Length of public key %i\n",ish );
     }
     if ( *q ==0x31)
     {

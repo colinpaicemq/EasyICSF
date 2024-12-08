@@ -1,7 +1,31 @@
+// this generates an AES skeleton
 #ifndef SKELAES_INCLUDE
 #define SKELAES_INCLUDE
-#include <printAESS.h> // colin special
-int skeletonAES(char *  type, char ** pData, int * lData)
+/**************************************************************
+ MIT License
+ Copyright (c) 2024 Colin Paice
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+ The above copyright notice and this permission notice shall be included in all
+ copies or substantial portions of the Software.
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
+ * Contributors:
+ *   Colin Paice - Initial Contribution
+ ************************************************************/
+// CSNBKTB2
+#include <printVAR.h> // colin special
+#include <time.h>
+int skeletonAES(char *  type, char * pData, int * lData)
 {
 /*-------------------------------------------------------------------*/
 /*  CSNBKTB2                                                         */
@@ -11,75 +35,110 @@ int skeletonAES(char *  type, char ** pData, int * lData)
   int rc;
   int rs;
   int zero = 0;
+  int  keyBitLength;
+  keyBitLength = 0  ;    //default is no clear key specified
+
+
   int rule_count ;
   char * pRule;
-  char8 Crule[ 5] ={
-   "INTERNAL","AES     ","CIPHER  ", "XPRTCPAC","ANY-MODE" };
-
-  char8 Erule[ 3] ={
-  "INTERNAL", "AES     ", "EXPORTER"};
-
-  char8 Irule[ 3] ={
-  "INTERNAL", "AES     ", "IMPORTER"};
-  int iType = *type;
-  switch(iType)
+  int l = strlen(type);
+  if (debug >=4)
+       printf("Length of rule string %i\n",l);
+  // check the rule is a multiple of 8
+  rule_count = l/8;
+  if (rule_count *8 != l)
   {
-    case 'C':  // cipher
-      pRule =  &Crule[0][0];
-      rule_count = sizeof(Crule)/8;
-      break;
-    case 'E':    // exporter
-      pRule =  &Erule[0][0];
-      rule_count = sizeof(Erule)/8;
-      break;
-    case 'I': // importer
-      pRule =  &Irule[0][0];
-      rule_count = sizeof(Irule)/8;
-      break;
-    default:
-      printf("Invalid type passed in to SKELAES\n");
-      return 8;
-  }
-  int lKeyToken=725;
-  char * pKeyToken;
-  pKeyToken = (char *) malloc(lKeyToken);
-  if (pKeyToken == 0)
-  {
-    printf("unable to allocate storage in genaes \n");
+    printf("SKELAES: invalid rule string - needs to be multiple of 8\n");
     return 8;
+  }
+  pRule = type;
+  printf("SKELAES: Using rule %s.\n", pRule);
+
+
+  // add some user data
+  // get the local time and format it in the record
+  int lUser1 = 23;
+  char user1[lUser1];
+  memset(&user1[0],' ',lUser1);
+  user1[0] = '1';
+  time_t temp;
+  struct tm *timeptr;
+  temp = time(NULL);
+  timeptr = localtime(&temp);
+  strftime(&user1[1],sizeof(user1)-1," %Y/%m/%d %T",timeptr);
+  //end user data
+  //  see if the user specified a hex key.
+  char * pcHexKey;
+  if ( pHex != 0 )
+  {
+    if ( debug >= 4)
+    {
+        printf("SKE:HEX: %8.8x,%8.8x,%8.8x,%8.8x\n",*pHex,
+           *(pHex+1),*(pHex+2),*(pHex+3));;
+    }
+    keyBitLength = 256;
+    pcHexKey  = (char *) pHex;
+  }
+  else
+  {
+    keyBitLength = 0;
+    pcHexKey = 0;
+  }
+  int localLength = *lData;  // we need this for the API to work
+  if (debug > 0)
+  {
+  printf("Localelength %i\n",localLength);
+  printf("lUser1       %i\n",lUser1     );
+  printf("lrule_count  %i\n",rule_count );
+  printf("keyBitLength %i\n",keyBitLength);
   }
   CSNBKTB2(
           &rc,               /* return code                   */
           &rs,               /* reason code                   */
-          &zero,             /* exit data length              */
-          0,                 /* exit data[]                   */
+//        &zero,             /* exit data length              */
+          0,                 /* exit data length              */
+           0,                 /* exit data[]                   */
           &rule_count,       /* rule array count              */
-          pRule,             /* rule array[]                  */
-          &zero,             /* clear key bit length          */
-          0,                 /* key value[]                   */
-          &zero,             /* key name length               */
-          0,                 /* key name[64]                  */
-          &zero,             /* user assoc data length        */
-          0,                 /* user associated data[]        */
-          &zero,             /* token data length             */
-          0,                 /* token data[]                  */
-          &zero,             /* service data length           */
-          0,                 /* service data[]                */
-          &lKeyToken,        /* target key token length       */
-          pKeyToken   );     /* target key token[]            */
+           pRule,             /* rule array[]                  */
+          &keyBitLength,     /* clear key bit length          */
+           pcHexKey,          /* clear value                   */
+   // name to be stored in the key.
+          0,                 /* key name length               */
+//        &zero,             /* key name length               */
+           0,                 /* key name[64]                  */
+   // installation data
+          &lUser1 ,          /* user assoc data length        */
+           &user1[0],         /* user associated data[]        */
+  // reserved - must be zero length
+          0,                 /* token data length             */
+//        &zero,             /* token data length             */
+           0,                 /* token data[]                  */
+  // following two  only used for DKYGENKY
+//        &zero,             /* service data length           */
+          0,                 /* service data length           */
+           0,                 /* service data[]                */
+  // the returned skeleton
+          &localLength,      /* target key token length       */
+           pData       );     /* target key token[]            */
 // if ( rc > 0)
  {
-    printf("SKELAES:CSNBKTB2 type=%s rc %i rs %i %s\n",type,
+    printf("SKELAES:CSNBKTB2 rc %i rs %i %s\n",
     rc,rs,csfgetrc(rs));
  }
+ *lData  = localLength; // pass the value back
  if ( rc > 0)
     return rc;
- *lData = lKeyToken;
- free (pData); // get rid of the previous block
- *pData = pKeyToken;
-// printf("skeletonAES key length %i\n",lKeyToken);
-// printHex(stdout,&keyToken,lKeyToken);
-   printAES((char *) pKeyToken,lKeyToken,stdout);
-   return 0;
+  if ( debug >=8)
+  {
+    printf("SKELAES output\n");
+    printHex(stdout,pData, localLength );
+  }
+//printf("skeletonAES key length %i\n", *lData  );
+// the following are used in the printVAR for spacing the data
+  char * before = " ";
+  char * after  = ",";
+  printVAR((char *) pData, *  lData,before,after, stdout);
+  printf("\n");
+  return 0;
 }
 #endif

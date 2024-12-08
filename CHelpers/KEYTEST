@@ -1,0 +1,103 @@
+//  call keytest to get the length of the key
+/**************************************************************
+ MIT License
+ Copyright (c) 2024 Colin Paice
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+ The above copyright notice and this permission notice shall be included in all
+ copies or substantial portions of the Software.
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
+ * Contributors:
+ *   Colin Paice - Initial Contribution
+ ************************************************************/
+int keytestGetKeyLength( char * pKey, int * pValue)
+{
+   int rc;
+   int rule_count                 =  2;
+   int zero = 0;
+   char * pRule;
+   char8 rule[2]    = {"AES     ","KEY-LEN "};
+   pRule = &rule[0][0];
+
+   int lKey = 9992;
+   int lValue = 2;
+   char tValue[lValue];
+   int rs;
+   CSNBKYT2(       &rc,
+                   &rs,
+                   &zero,              /* exit data length       */
+                   0    ,              /* exit data[]            */
+                   &rule_count,        /* rule array count       */
+                   pRule,              /* rule array[]           */
+                   &lKey  ,            /* source key    length,  */
+                   pKey,
+                   &zero,              /*  kek   key    length,  */
+                   0,
+                   &zero,              // reserver
+                   0,
+                   &lValue,            // verification length
+                   &tValue[0]);
+   if (rc == 8 && rs == 47)
+      return 1;
+   if( rc > 0)
+   {
+     printf("keytest: rc %i rs %i %s\n",rc,rs,csfgetrc(rs));
+     return rc;
+   }
+   short s;
+   memcpy(&s,&tValue[0],2);
+   int  ii = s;
+   * pValue =      ii;
+  return 0;
+}
+//
+//  keytestCheckSum
+//
+int keytestGetCheckSum( char * pKey, char * pValue)
+{
+   printf("++++++++++++++++++++++++++\n");
+   int rc;
+   int zero = 0;
+   char * pRule;
+   int rule_count                 =  3;
+   char8 rule[3]    = {"AES     ","GENERATE","SHA-256 "};
+   pRule = &rule[0][0];
+
+   int lKey = 9992;
+   int lValue = 8;
+   char tValue[lValue];
+   int rs;
+   CSNBKYT2(       &rc,
+                   &rs,
+                   &zero,              /* exit data length       */
+                   0    ,              /* exit data[]            */
+                   &rule_count,        /* rule array count       */
+                   pRule,              /* rule array[]           */
+                   &lKey  ,            /* source key    length,  */
+                   pKey,
+                   &zero,              /*  kek   key    length,  */
+                   0,
+                   &zero,              // reserver
+                   0,
+                   &lValue,            // verification length
+                   &tValue[0]);
+   if (rc == 8 && rs == 47)
+      return 1;
+   if( rc > 0)
+   {
+     printf("keytest: rc %i rs %i %s\n",rc,rs,csfgetrc(rs));
+     return rc;
+   }
+   memcpy(pValue,&tValue[0] , lValue);
+  return 0;
+}

@@ -1,19 +1,43 @@
+// convert a null terminated string in to a blank padded char 64 string
 #ifndef DO64_INCLUDE
 #define  DO64_INCLUDE
-#define do64(v,pp) \
-char v[64]; \
-memset(&v,' ',64); \
+/**************************************************************
+ MIT License
+ Copyright (c) 2024 Colin Paice
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+ The above copyright notice and this permission notice shall be included in all
+ copies or substantial portions of the Software.
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
+ * Contributors:
+ *   Colin Paice - Initial Contribution
+ ************************************************************/
+//  create a char[64] string from input
+#define do64(var,pp) \
+char var[64]; \
+memset(&var,' ',64); \
 for ( int i##var = 0;i##var < 64; i##var ++)\
 if (pp[i##var] == 0 ) break; \
-else v[i##var] = pp[i##var]
-#ifdef no
-// from macro char * p##v = (char *) &v; \
-char * do64(char * pIn) {
-  char * pOut;
-  pOut = (char *) malloc(64);
-  memset(pOut,' ',64);
-  memcpy(pOut,pIn ,strlen(pIn));
-  return pOut;
-}
-#endif
+else var[i##var] = pp[i##var]
+// strip the terminating blanks from a char[64] string for display
+#define strip64(out,in) \
+  char out[65]; \
+  memcpy(&out[0],&in[0],64); \
+  out[64] = 0;  \
+  for ( int i##out  = 63; i##out >0 ; i##out --)\
+  {                                  \
+    if (out[i##out] !=  ' ') break;      \
+    out[i##out] = 0x00; \
+  }
+
 #endif

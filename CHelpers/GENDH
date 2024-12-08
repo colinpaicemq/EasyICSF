@@ -1,15 +1,41 @@
+// generate a key using diffie-Hellman
 #ifndef KEYDH_INCLUDE
 #define KEYDH_INCLUDE
+/**************************************************************
+ MIT License
+ Copyright (c) 2024 Colin Paice
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+ The above copyright notice and this permission notice shall be included in all
+ copies or substantial portions of the Software.
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
+ * Contributors:
+ *   Colin Paice - Initial Contribution
+ ************************************************************/
 int GENDH(
 // input
   char * pPrivate,
   char * pPublic,
 // output
-  char **  pData,
+  char * pData,
   int  * lData,
   char * pInParty) // randomiser string
 {
 //  printHex(stdout,*pData,64);
+  if (debug > 0)
+  {
+     printf("GENDH: Input 8.8x,%i\n",pData, *lData);
+  }
   do64(public,pPublic);
   do64(private,pPrivate);
   printf("Public %s\n",pPublic);
@@ -17,12 +43,13 @@ int GENDH(
   int rc;
   int rs;
   int zero = 0;
+  int tlData   = * lData;
   int rule_count                 =  2;
   // key type AES and used for OP (on this system
   char8 rule[2]  = {"DERIV01 "
                    ,"KEY-AES "};
   char * pRule = & rule[0][0];
-  int keyLength = 256 ;//  AES 256  - why use any other?
+  int keyBitLength = 256 ;// AES 256 - why use any other?
 
 
   int i64 = 64;
@@ -31,20 +58,6 @@ int GENDH(
   if (strlen(pParty) == 0)
      pParty = "cOlins_seed";
   int lParty = strlen(pParty);
-
-  // the token coming in can be short (eg 56 bytes)
-  // but it generates up to 900 bytes
-  // so we we have to allocate a new buffer,big enough
-  // and copy the old buffer into it
-  int lOutput = 900;
-  char * pOutput;
-  pOutput = (char *) malloc(lOutput);
-  if ( pOutput == 0)
-  {
-     printf("GENDH:CSNDEDH malloc failed\n");
-     return 8;
-  }
-  memcpy(pOutput,*pData,*lData);
 
   CSNDEDH(
           &rc  ,                   /* return code         */
@@ -56,20 +69,20 @@ int GENDH(
           pRule,                   /* rule array[]        ! */
 
           &i64,                    /* Len private           */
-  (char *)&private,                /* private             ! */
+          &private[0],             /* private             ! */
 
           &zero, // l Kek
           0,                       // p KEK
 
           &i64,                    /* Len public            */
- (char *) &public      ,            /* public              ! */
+          &public[0],               /* public              ! */
 
           &zero,                    /* chaining             0*/
           0,                        /* chaining ignored     0*/
           &lParty,                  // Len'randomiser string
           pParty,                   // randomiser string
 
-          &keyLength,
+          &keyBitLength,
 
           &zero,                    /* reserved1             */
           0,                        /*                       */
@@ -83,17 +96,27 @@ int GENDH(
           0,                        /*                       */
           &zero,                    /* L' output kek         */
           0,                        /*    output kek         */
-          &lOutput,
-          pOutput
+          &tlData,                  // length of the data
+          pData
   );           /* output key id2[]      !  */
+//  printf("!! CSNDEDH  rc %i rs %i %s\n",rc,rs,csfgetrc(rs));
+  *lData =tlData;
+  if (rs == 11000 ) // Invalid length for a key token, key, or text field
+  {
+     printf("input lenth %d \n",tlData  );
+     return 8;
+  }
   if ( rc > 0)
   {
     printf("CSNDEDH  rc %i rs %i %s\n",rc,rs,csfgetrc(rs));
     return rc;
   }
-  free(*pData);
-  * pData = pOutput;
-  * lData = lOutput;
+  if (debug > 0)
+  {
+    printf("GENDH: Output %8.8x,%i\n",pData, tlData);
+    processKey(pData,tlData,"","",stdout);
+//  printHex(stdout,pData  ,tlData  );
+  }
   return rc;
 }
 #endif

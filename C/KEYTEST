@@ -1,0 +1,121 @@
+//  Generate a checksum for a certificate
+/**************************************************************
+MIT License
+Copyright (c) 2024 Colin Paice
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+* Contributors:
+*   Colin Paice - Initial Contribution
+************************************************************/
+#pragma comment(user,"Copyright Colin Paice 2024")
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <string.h>
+#include </usr/include/csfbext.h>
+#include <printhx.h> // colin special
+#include <csfgetrc.h>   // colin special
+#include <read.h>  // colin special
+int debug;
+typedef char    char8[8];
+#include <exists.h>
+#include <errno.h>
+#include <keytype.h>  // colin special
+#include <printhx.h>
+#include </usr/include/csfbext.h>
+#include <csfgetrc.h>  // colin special
+#include <args2.h>  // colin special
+#include <time.h>
+#include <parserul.h>  // colin special
+//nclude <writekey.h>  // colin special
+int main( int argc, char *argv??(??))
+{
+  char * pKey   = "";
+  int rc = 0;
+ int rs;
+  int i64 = 64;
+  int lRules = 121; // max size of rule
+  char rules[lRules];
+  char * pRule  = 0;
+  char * pDebug= "";
+  rc += readArgs( argc,argv,"-key",0 ,&pKey,"v");
+  rc += readArgs( argc,argv,"-debug",0 ,&pDebug,"v");
+  rc += readArgs( argc,argv,"-rule",0 ,&pRule,"v");
+
+  if (strlen(pDebug) > 0)
+  {
+    debug = atoi(pDebug);
+    printf("debug set %i\n",debug);
+  }
+
+  if (rc > 0 )
+  {
+     printf("Problem with parameters %i\n",rc);
+     return 8;
+  }
+  // process any rules which were passed in
+  if ( pRule[0] == 0 || strlen(pRule) == 0)
+     pRule = "AES,GENERATE,SHA-256";
+
+  rc = parseRules(pRule,&rules[0],lRules);
+  if ( rc > 0)
+    {
+       printf("Problem parsing rules %s\n",pRule);
+       return 8;
+    }
+
+  int rule_count ;
+  rule_count = strlen(rules)/8;
+//printf("RULES:%s : %i\n",pRule,rule_count);
+  //
+  if ( pKey[0] == 0 ) {
+    rc++;printf("-key ...  is required\n");
+    return 8;
+  }
+  if (debug > 0)
+    printf("Rule %*.*s.\n",rule_count*8,rule_count*8,rules) ;
+
+  do64(KEY,pKey );  // ensure it it padded with blanks to 64 bytes
+  int lVerify = 8;
+  int zero = 0;    // for passing a zero length value through
+  int verify[2];  // this means we can use printf( %8.8x....)
+                  //  better than char ..[8]
+  CSNBKYT2(       &rc,
+                  &rs,
+                  0,                  /* exit data length       */
+                  0    ,              /* exit data[]            */
+                  &rule_count,        /* rule array count       */
+                  &rules[0],          /* rule array[]           */
+                  &i64   ,            /* source key    length,  */
+                  &KEY[0],            // padded to 64 chars
+                  &zero,              /* kek   key    length,  */
+                  0,                  // no kek
+                  &zero,              // reserverd
+                  0,                  // ignored
+                  // now the returned value
+                  &lVerify,           // verification length
+      (char *)    &verify[0]);
+   if( rc > 0)
+   {
+     printf("keytest: rc %i rs %i %s\n",rc,rs,csfgetrc(rs));
+     return rc;
+   }
+   printf("Keyname:%s\n",pKey);
+   printf("Hexadecimal Key check value %8.8X,%8.8X\n",
+           verify[0],verify[1]);
+//printHex(stdout,&verify[0],lVerify);
+  return 0;
+}

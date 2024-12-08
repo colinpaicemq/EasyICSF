@@ -1,0 +1,161 @@
+//  set meta data attributes for CKDS objects
+/**************************************************************
+MIT License
+Copyright (c) 2024 Colin Paice
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+* Contributors:
+*   Colin Paice - Initial Contribution
+************************************************************/
+  /*Include standard libraries */
+#define HEREIAM printf("File:%s Line:%d  \n", __FILE__,__LINE__);
+#define _OPEN_SYS
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <string.h>
+#include </usr/include/csfbext.h>
+int debug = 0;
+#include <printhx.h>  // colin special
+#include <CSFGETRC.h>  // colin special
+#include <args2.h>  // colin special
+#include <writemd.h> // colin special
+typedef char    char8[8];
+int main( int argc, char *argv??(??))
+{
+  char * pKey   = "";
+  int rc = 0;
+  int zero = 0;
+  char baseMD[100]; // this should be plenty of space
+  char * pBase =  &baseMD[0];
+  typedef struct {
+    short length;
+    short type  ;
+    char  date[8];
+  } md   ;
+  int valid = 0;
+  md * pMD;
+  pMD = (md * ) pBase;
+  char * pStart;
+  char * pEnd  ;
+  char * pArchive;
+  char * pProhibit;
+  char * pDebug= "";
+  char * pHelp =  "";
+  rc += readArgs( argc,argv,"-key"  ,0,&pKey,"v");
+  rc += readArgs( argc,argv,"-start",0,&pStart,"v");
+  rc += readArgs( argc,argv,"-end"  ,0,&pEnd,"v");
+  rc += readArgs( argc,argv,"-archive",0,&pArchive,"v");
+  rc += readArgs( argc,argv,"-prohibit",0,&pProhibit,"v");
+  rc += readArgs( argc,argv,"-debug",0,&pDebug,"v");
+  rc += readArgs( argc,argv,"-help",0,&pDebug,""); // no value needed
+//printf("%i %s.\n",strlen(pProhibit),pProhibit);
+  if (strlen(pDebug) > 0)
+  {
+    debug = atoi(pDebug);
+    printf("debug set %i\n",debug);
+  }
+  if (pHelp != "" )
+  {
+     printf("syntaxt is -key value  < -start yyyymmdd > <-end yyyymmdd >"
+         "  <-archive on|off  > < -probibit on|off >\n");
+     return 12;
+  }
+
+  if (rc > 0 )
+  {
+     printf("Problem with parameters %i\n",rc);
+     return 8;
+  }
+  if (strlen(pStart) > 0)
+  {
+     if (strlen(pStart) != 8)
+     {
+        printf("The valye of the -start is yyyymmdd\n");
+        return 12;
+     }
+     printf("  -key %s -start %12.12s\n",pKey,pStart);
+     pMD -> type = 0x0004; // start date
+     pMD -> length = sizeof(md);
+     memcpy( pMD -> date ,pStart,8); // end date
+     pBase += sizeof(md);
+     pMD = (md * )  pBase;
+  }
+
+  if (strlen(pEnd ) > 0)
+  {
+     if (strlen(pEnd  ) != 8)
+     {
+        printf("Format -end yyyymmdd\n");
+        return 12;
+     }
+
+     pMD -> type = 0x0005; // end date
+     memcpy(  pMD -> date,pEnd,8); // end date
+     printHex(stdout,pMD,16);
+     pMD -> length = sizeof(md);
+     printf("  -key %s -end %12.12s\n",pKey,pEnd);
+     pBase += sizeof(md);
+     pMD = (md * )  pBase;
+  }
+
+  if (strlen(pArchive) > 0)
+  {
+     pMD -> type = 0x0009; // start date
+     pMD -> length = 5; // length,type, value
+     if (strlen(pArchive ) == 2  && strcmp(pArchive,"on") == 0)
+       pMD -> date[0] = 1;
+     else
+     if (strlen(pArchive ) == 3  && strcmp(pArchive,"off") == 0)
+       pMD -> date[0] = 0;
+     else
+     {
+        printf("The value of the -archive is on|off\n");
+        return 12;
+     }
+     printf("  -key %s -archive %s\n",pKey,pArchive);
+     pBase += 5         ;
+     pMD = (md * )  pBase;
+  }
+
+  if (strlen(pProhibit) > 0)
+  {
+     printf("  -key %s -prohibit %s.\n",pKey,pProhibit);
+     pMD -> type = 0x000A; // start date
+     pMD -> length = 5; // length,type, value
+     if (strlen(pProhibit) == 2  && strcmp(pProhibit,"on") == 0)
+       pMD -> date[0] = 1;
+     else
+     if (strlen(pProhibit ) == 3  && strcmp(pProhibit,"off") == 0)
+       pMD -> date[0] = 0;
+     else
+     {
+        printf("The value of the -archive is on|off\n");
+        return 12;
+     }
+     pBase += 5         ;
+     pMD = (md * )  pBase;
+  }
+  int lMD = pBase - &baseMD[0];
+  if (debug > 0)
+  {
+    printf("Meta data\n");
+    printHex(stdout,&baseMD[0],lMD);
+  }
+  rc = writeMD(pKey, &baseMD[0], lMD);
+  return rc;
+}

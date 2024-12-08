@@ -1,0 +1,223 @@
+// part of list processing
+/**************************************************************
+ MIT License
+ Copyright (c) 2024 Colin Paice
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+ The above copyright notice and this permission notice shall be included in all
+ copies or substantial portions of the Software.
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
+ * Contributors:
+ *   Colin Paice - Initial Contribution
+ ************************************************************/
+// #include <pkcs11.h>
+  #include <cka.h>
+//#include <cka2.h>
+
+int getDetail(char * pObject ) {
+   int x509List[] = {CKA_ISSUER,CKA_SUBJECT
+                    //  NOT CKA_VALUE because it is a hybrid
+                    };
+   int rc = -1;
+   int rs = -1;
+   int exit_data_length = 0 ;
+   char exit_data[1];
+   int rule_array_count = 0;
+   char rule_array[16];                // ignored
+   char handle[44];
+   memset(&handle[0],' ',44);
+   memcpy(&handle[0],pObject, 44) ;
+   char ID;
+   char * pID = "Unknown";
+   ID = *(pObject + 40) ;
+   switch(ID)
+   {
+      case 'S':pID = "S:Clear session object."; break;
+      case 'T':pID = "T:Clear token object."; break;
+      case 'U':pID = "U:Clear state object."; break;
+      case 'X':
+         pID = "X:Enterprise PKCS #11 secure session object.";break;
+      case 'Y':
+         pID = "Y:Enterprise PKCS #11 secure token object.";break;
+      case 'Z':
+         pID = "Z:Enterprise PKCS #11 secure state object.";break;
+   }
+   printf("Token:%.32s.\n",pObject);
+   printf("   Sequence:%.8s\n", pObject+32);
+   printf("   ID:%s\n",pID);
+   int handle_count= 1;
+   int attribute_l=10000;
+   char attribute[10000];
+   CSFPGAV(
+      &rc,
+      &rs,
+      &exit_data_length,
+      &exit_data[0],
+      &handle[0],
+      &rule_array_count,
+      &rule_array[0],
+      &attribute_l ,
+      &attribute[0]);
+    //
+    // now format it
+    //
+    if (rc <= 8)
+    {
+      int jloop;
+      char * pEnd =  & attribute[2]  + attribute_l;
+      short * pCount = (short *)  &attribute[0];
+      short   pL;
+      char * pData;
+      pData = & attribute[2];
+      int jLoop;
+
+      typedef struct lookup
+      {
+         int   name ;
+         defs * which;
+      } lookup;
+      lookup lookupVal[] = {
+      {CKA_CLASS, CKO       },
+      {CKA_KEY_TYPE   , CKK },
+      {CKA_KEY_GEN_MECHANISM,CKM},
+      {CKA_KEY_GEN_MECHANISM,CKM},
+      {CKA_CERTIFICATE_TYPE, CKC},
+      {CKA_CERTIFICATE_CATEGORY,CERTCAT},
+      #ifdef del
+      {CKA_PRIVATE    , TRUEFALSE},
+      {CKA_MODIFIABLE , TRUEFALSE},
+      {CKA_DERIVE     , TRUEFALSE},
+      {CKA_LOCAL      , TRUEFALSE},
+      {CKA_DECRYPT    , TRUEFALSE},
+      {CKA_SIGN       , TRUEFALSE},
+      {CKA_SIGN_RECOVER,TRUEFALSE},
+      {CKA_UNWRAP     , TRUEFALSE},
+      {CKA_EXTRACTABLE, TRUEFALSE},
+      {CKA_IBM_FIPS140, TRUEFALSE},
+      {CKA_IBM_REGIONAL,TRUEFALSE},
+      {CKA_VERIFY,      TRUEFALSE},
+      {CKA_VERIFY_RECOVER, TRUEFALSE},
+      {CKA_IBM_SECURE,  TRUEFALSE},
+      {CKA_NEVER_EXTRACTABLE       , TRUEFALSE},
+      {CKA_SENSITIVE               , TRUEFALSE},
+      {CKA_NEVER_EXTRACTABLE       , TRUEFALSE},
+      {CKA_ALWAYS_SENSITIVE        , TRUEFALSE},
+      {CKA_WRAP_WITH_TRUSTED       , TRUEFALSE},
+      #endif
+      {-1,0}};
+      // for each parameter
+      for (jLoop = 0;jLoop < * pCount; jLoop ++)
+      {
+         memcpy(&pL ,pData + 4,2);
+         int name;
+         int i;
+         int found = 0;
+         int value = 0;
+         if ( pL == 1) value =  * (char *)(pData + 6);
+         else
+         if ( pL == 2) value =  * (short *)(pData + 6);
+         else
+         if ( pL == 4) value =  * (int   *)(pData + 6);
+         printf("PL %d\n",pL);
+         printHex(stdout,pData,16);
+         memcpy(&name,pData,4);
+         char * pResult = getPkcsType(CKA  , name);
+         for (i = 0; i < sizeof(x509List)/sizeof(x509List[0]); i++)
+         {
+           if (name == x509List[i])
+           {
+            printf("    %s(%hd):",pResult,pL );
+            x509_to_string(pData +6,pL);
+            found = 1;
+            printf("\n");
+           }
+         }
+         if (found == 0)
+         {
+           if ( name ==  CKA_LABEL)
+           {
+              printf("    %s(%hd):%.*s.",pResult,pL,pL,pData+6);
+              found = 1;
+              printf("\n");
+//            if ( detail > 1)
+           }
+           else
+           if ( name ==  CKA_APPLICATION )
+           {
+              printf("    %s(%hd):%.*s.",pResult,pL,pL,pData+6);
+              found = 1;
+              printf("\n");
+            }
+           else
+           if (strcmp(pResult,"Unknown")== 0)
+           {
+               printf("Unknown\n");
+               printHex(stdout,pData  ,pL+6);
+           }
+           else
+           {
+             lookup * pLookup;
+             pLookup = &lookupVal[0];
+             int i = 0;
+             for (pLookup = &lookupVal[0];pLookup-> name !=-1;
+                  pLookup++)
+             {
+               if (pLookup -> name  == name )
+               {
+                 printf("    %s:%s",pResult,
+                        getPkcsType(pLookup-> which,value));
+                 found = 1;
+                 printf("\n");
+                 break;
+               }
+             }   // pLookup
+        }
+        if(found == 0)
+        {
+          if (pL == 0)
+             printf("    %s:.\n",pResult);
+          else
+          if (pL == 1)
+          {
+             if (*(pData+6) == 0)
+                printf("    %s:FALSE.\n",pResult);
+             else
+             if (*(pData+6) == 1)
+                printf("    %s:TRUE.\n",pResult);
+             else
+                printf("    %s:0x%2.2x.\n",pResult,*(pData+6));
+          }
+          else
+          if (pL == 2)
+             printf("2   %s:0x%4.4x.\n",pResult,*(pData+6));
+          else
+          if (pL == 3)
+             printf("3   %s:0x%6.6x.\n",pResult,*(pData+6));
+          else
+          if (pL == 4)
+             printf("4   %s:0x%8.8x.\n",pResult,*(pData+6));
+          else
+          {
+             printf("?   %s(%d):  \n",pResult,pL);
+             if (detail >=3  )
+             printHex(stdout,pData+6,pL);
+          }
+        } // found == 0
+      }
+      // do the next one
+      pData += 4 + 2 +  pL ;
+      if (pData > pEnd) break;
+      }
+   }
+  return rc;
+ }

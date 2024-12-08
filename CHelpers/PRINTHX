@@ -1,5 +1,27 @@
+// print data in hex format to the given dd name
 #ifndef PRINTHEX_INCLUDE
 #define PRINTHEX_INCLUDE
+/**************************************************************
+ MIT License
+ Copyright (c) 2024 Colin Paice
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+ The above copyright notice and this permission notice shall be included in all
+ copies or substantial portions of the Software.
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
+ * Contributors:
+ *   Colin Paice - Initial Contribution
+ ************************************************************/
 #include <ctype.h>
 #define ASCII_STRING \
                 "................" \
@@ -46,18 +68,21 @@ void printHex(FILE * pFile,void *buff, int length)
             else fprintf(pFile,"  ");
     }
     /***********************************************************
-     * Next print the characters themselves (if they're
+     * Next print the EBCDIC characters themselves (if they're
      * printable).
      ********************************************************/
   fprintf(pFile," %c", sepchars[0]);
   for( j=0; j<bytesleft; j++ ) {
-          printchar = (char) isprint(*(pbuff+j)) ? *(pbuff+j) : '.';
-          fprintf(pFile,"%c",printchar);
+          if (isprint(*(pbuff+j)) > 0)
+                fprintf(pFile,"%c",*(pbuff+j));
+          else
+                fprintf(pFile,".");
   }
   /**********************************************************
    * ..and pad the last row with blanks if necessary.
    **********************************************************/
   for( j=bytesleft; j<16; j++ ) fprintf(pFile," ");
+  // now the ASCII characters to printable EBCDIC
   fprintf(pFile,"%c",sepchars[1]);
   for( j=0; j<bytesleft; j++ ) {
           fprintf(pFile,"%c", ascii_tab[*(pbuff+j)]);
@@ -69,5 +94,39 @@ void printHex(FILE * pFile,void *buff, int length)
   fprintf(pFile,"%c\n",sepchars[1]);
   }
   return;
+}
+char other_tab[256];
+void ascii_it(char * pBuffer, int lBuffer)
+{
+  // set up the conversion table
+  memset(&other_tab[0],0,256);
+  // covert to ascii
+  for (int i = 0; i< sizeof(ascii_tab); i++)
+  {
+    char c  = ascii_tab[i];
+    if (c != '.')
+      other_tab[c] = i;  /* map from EBCDIC to its ascii */
+  }
+  other_tab[0x40] = 0x20;
+  other_tab[0x00] = 0x2e;
+  for (int i = 0; i< sizeof(other_tab); i++)
+  {
+    if (other_tab[i] == 0)
+        other_tab[i] =  0x2e ; // .
+  }
+  //
+  // now do the conversion
+  //
+  for ( int i = 0;i < lBuffer ; i++)
+  {
+     pBuffer[i] =  other_tab[pBuffer[i]];
+  }
+}
+void EBCDIC_it(char * pBuffer, int lBuffer)
+{
+  for ( int i = 0;i < lBuffer ; i++)
+  {
+     pBuffer[i] =  ascii_tab[pBuffer[i]];
+  }
 }
 #endif
