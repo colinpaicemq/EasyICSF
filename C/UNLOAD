@@ -1,0 +1,102 @@
+// unload an encrypted key to disk
+// it does not unload the meta data, because we cannot reload
+// all of it at the remote end.
+/**************************************************************
+MIT License
+Copyright (c) 2024 Colin Paice
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+* Contributors:
+*   Colin Paice - Initial Contribution
+************************************************************/
+#pragma comment(user,"Copyright Colin Paice 2024")
+//  The layout of the CSFKEYS file is
+//  So we will use some of these fields
+// import a key from the //CSFKEYS file
+//  Key label 1 - 64
+//  Keytype 65 71 eg CIPHER
+//  KEK label or CLEAR   72 to 136
+//  KEK type  = EXPORTER 137
+//  Key   variable length  145 to...
+  /*Include standard libraries */
+#define _OPEN_SYS
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <string.h>
+#include </usr/include/csfbext.h>
+int debug = 0;
+//
+typedef char    char8[8];
+#include <printhx.h>  // colin special
+#include <csfgetrc.h>  // colin special
+#include <exists.h>  // colin special
+//nclude <zo64.h>  // colin special
+#include <keytype.h>  // colin special
+//nclude <printpka.h>  // colin special
+//nclude <printvar.h>  // colin special
+#include <args2.h>  // colin special
+#include <writekey.h>  // colin special
+#include <findkey.h>  // colin special
+// clude <export.h>  // colin special
+int main( int argc, char *argv??(??))
+{
+
+  char * pKey   = "";
+  char * dd     = "DD:KEY";
+  int rc = 0;
+  rc += readArgs( argc,argv,"-key",0 ,&pKey,"v");
+  char * pDebug= "";
+  rc += readArgs( argc,argv,"-debug",0 ,&pDebug,"v");
+
+  if (strlen(pDebug) > 0)
+  {
+    debug = atoi(pDebug);
+    printf("debug set %i\n",debug);
+  }
+  if (rc > 0 )
+  {
+     printf("Problem with parameters %i\n",rc);
+     return 8;
+  }
+  if ( pKey[0] == 0 ) {rc++;printf("-key ...  is required\n");}
+  if ( rc > 0) return rc;
+
+  int   lData = 725;
+  char  unloaded[lData+144]; // 145 for the size of the header
+  memset(&unloaded[0],' ',144); // blank the header
+  do64(KEY,pKey); // make it 64 padded to 64 bytes
+  memcpy(&unloaded[0],KEY,64);
+  memcpy(&unloaded[64],"CIPHER",6);
+  char * pData = &unloaded[144];
+  rc = readCKDS(pKey, pData,&lData);
+  if (rc > 0 )
+      return rc;
+  printf("Key:%s\n",pKey);
+  printVAR(pData,lData-144,"","",stdout);
+  rc = writeKey(dd,&unloaded[0],lData+144); // include the header
+  if ( debug  > 0)
+  {
+    printf("Unloaded data \n");
+    printHex(stdout,&unloaded[0],lData+144);  // include the header
+  }
+  if (rc > 0 )
+     return rc;
+  printf("unload of %s successful\n",pKey);
+  return rc;
+}
+

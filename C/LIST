@@ -104,8 +104,8 @@ int main(int argc, char * argv[]) {
   char * pEsearch =pSearch + sizeof(search);
   int x = 0;
   // we need both or neither of data type and days
-  printf("#84 %i %i\n",strlen(datetype),strlen(days));
-  printf("#85:%s.%s.\n",datetype,days);
+//printf("#84 %i %i\n",strlen(datetype),strlen(days));
+//printf("#85:%s.%s.\n",datetype,days);
   if (strlen(datetype) == 0 &&strlen(days)== 0)
       ;  // every thing good.
   else
@@ -355,7 +355,7 @@ int  metaData(char type[8],char * label,FILE * pF)
                  {4, 5,0,"Key validity end days"},
                  {4, 6,0,"Last reference days"},
                  {4, 7,0,"Last reference days stck"},
-                 {4, 8,0,"Archive days"},
+                 {4, 8,0,"Archive date"},
                  {4, 9,0,"Record Archive"},
                  {4,10,0,"Prohibit Archive"},
                  {4,11,0,"Recall days"}

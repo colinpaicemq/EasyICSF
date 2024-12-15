@@ -5,10 +5,10 @@
 //RUN1     EXEC PGM=LIST,REGION=0M,PARMDD=MYPARMS
 //* start parmameters in column 2
 //MYPARMS DD *
+/*
  -label ATOB*
  -datetype c
  -days +7
-/*
 -help
    -debug 4
    -label COLINS3

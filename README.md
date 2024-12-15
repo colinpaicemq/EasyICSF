@@ -18,6 +18,8 @@ on
 This Github package provides load modules which can be run in batch to: 
 
 - [list the contents of a PKDS and CKDS](#List-the-contents-of-the-CKDS-and-PKDS)
+- [unload a key from a CKDS to a local file](#unload-a-key)
+- [reload a key from a data set into a the active CKDS](#reload-a-key)
 - [export a key from CKDS into a data set so it can be imported on another system](#Export-a-key)
 - [import a key from a data set into the CKDS](#Import-a-key)
 - [set meta data attributes](#Set-meta-data-attributes), such as archive, and validity dates
@@ -176,12 +178,74 @@ Installation defined
 00000010 : F2F87AF4 F00040                      28:40.             z  .@                                                          
    }                                                                                                                              
 ```
+## Unload a key
+This extracts a key from the CKDS writes it to a sequential file.   It can be reloaded on the same, or a different system.
+Because it is encrypted with the hardware key, it can only be reloaded on a system with the same hardware key.
+### Example JCL
+```
+//IBMUNL  JOB 'COLIN',CLASS=A,REGION=0M,COND=(4,LE) RESTART=RUN 
+//JOBLIB JCLLIB ORDER=(COLIN.ICSF.C,CBC.SCCNPRC) 
+//* COMPILE    EXEC  CCPROC,PROG=UNLOAD 
+//* 
+//* 
+// SET KEY='-key   SECKEY2         ' 
+// SET DB='              ' 
+// SET DB='-debug 8      ' 
+//RUN      EXEC PGM=UNLOAD,REGION=0M, 
+//   PARM='&KEY. &KEK.   &DB         ' 
+//STEPLIB  DD DISP=SHR,DSN=COLIN.ICSFLOAD 
+//SYSPRINT DD SYSOUT=*,DCB=(LRECL=200) 
+//SYSOUT   DD SYSOUT=* 
+//KEY      DD DSN=COLIN.UNLOAD.AES,DISP=(OLD) 
+//*        SPACE=(CYL,(1,1)),DCB=(LRECL=7000,RECFM=V) 
+```
+
+Where the parameters are
+
+-key value
+: the label of the record in the CKDS to unload 
+
+-debug n 
+: where n is a value of 0 or larger. This is optional  If n > 0 it provides verbose diagnostic information.
+
+## Reload a key
+This takes the record in the unloaded data set and writes it to the active CKDS.   It can be reloaded on the same, or a different system.
+Because it is encrypted with the hardware key, it can only be reloaded to a system with the same hardware key.
+### Example JCL
+```
+//IBMRELOA JOB 'COLIN',CLASS=A,REGION=0M,COND=(4,LE) RESTART=RUN 
+//JOBLIB JCLLIB ORDER=(COLIN.ICSF.C,CBC.SCCNPRC) 
+//*OMPILE    EXEC  CCPROC,PROG=RELOAD 
+//* 
+//* 
+// SET DB='-debug 8      ' 
+// SET KEY='-key   SECKEY2         ' 
+//RUN      EXEC PGM=RELOAD,REGION=0M, 
+//   PARM='&KEY. &DB         ' 
+//STEPLIB  DD DISP=SHR,DSN=COLIN.ICSFLOAD 
+//SYSPRINT DD SYSOUT=*,DCB=(LRECL=200) 
+//SYSOUT   DD SYSOUT=* 
+//KEY      DD DSN=COLIN.UNLOAD.AES,DISP=(OLD) 
+```
+
+Where the parameters are
+
+-key value
+: the label of the record in the CKDS to unload 
+
+- replace
+: where value is y|n.    If the record already exists in the CKDS, to replace it or not.
+
+-debug n 
+: where n is a value of 0 or larger. This is optional  If n > 0 it provides verbose diagnostic information.
+
 
 ## Export a key
 This extracts a key from the CKDS and encrypts it with a Key Exporting Key (KEK).
 It writes the encrypted key to the data set specified in //CSFKEYS, in the same format 
 that the ICSF utility CSFKGUP.  You can send this data set to 
-the remote system and import it.
+the remote system and import it.   It can be imported if the remote end has the matching KEK. It does not matter if the 
+hardware encryption key is different.
 
 ### Example JCL
 ```
@@ -212,7 +276,9 @@ Where the parameters are
 
 ## Import a key
 This reads a data set containing the encrypted key, decrypts it with an importer KEK and writes it to the CKDS.
-The data set record is in the same format that the ICSF utility CSFKGUP does
+The data set record is in the same format that the ICSF utility CSFKGUP does.   
+It can be imported if the remote end has the matching KEK. It does not matter if the 
+hardware encryption key is different.
 
 ### Example JCL
 ```

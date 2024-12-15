@@ -142,14 +142,6 @@ int exportKey (char * pKey, char * pKek,
   memcpy(pOut+136,"EXPORTER",8);
   lOut = lOut - 144; // the header
   char * pOut2 = pOut + 144; // past the header
-#ifdef delete
-  int lData2 = lCKDSRecord;
-  char * pData2;
-  char data2[lData2];
-  rc = findKey("C",pKey,&data2[0],&lData2);
-  printf("findkey rc %i length%i\n",rc, lData2);
-  if (rc != 0) return 8;
-#endif
   CSNDSYX(
              &rc,                /* return code            */
              &rs ,               /* reason code            */
@@ -157,8 +149,6 @@ int exportKey (char * pKey, char * pKek,
              0    ,              /* exit data[]            */
              &rule_count,        /* rule array count       */
              pRule,              /* rule array[]           */
-//          &lData2,
-//           &data2[0],
              &i64   ,            /* source key    length,  */
              &Key64[0],          /* source key             */
              &i64,               /* Exporter  key length   */

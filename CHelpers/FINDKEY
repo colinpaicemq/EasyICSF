@@ -58,7 +58,7 @@ int findKey(char * which, char * key,
      }
      else
      {
-       printf("Findkey: readks PKDS & CKDS  for %.64s rc %i\n",key,rc);
+       printf("Findkey: readksPKDS  for %.64s rc %i\n",key,rc);
        return 8;
      }
    }
@@ -75,7 +75,7 @@ else
      }
    else
    {
-     printf("Findkey: readks CKDS for %.64s rc %i\n",key,rc);
+     printf("Findkey: readCKDS for %.64s rc %i\n",key,rc);
      return 8;
    }
  }
@@ -91,7 +91,7 @@ else
      }
    else
    {
-     printf("Findkey: readkKDS for %.64s rc %i\n",key,rc);
+     printf("Findkey: readPKDS for %.64s rc %i\n",key,rc);
      return 8;
    }
  }
